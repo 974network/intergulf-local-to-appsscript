@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Inter Gulf | Local Create Quote</title>
+  <title>Inter Gulf | Quotation Generator</title>
   <style>
     body{font-family:Arial,sans-serif;max-width:980px;margin:24px auto;padding:0 16px;color:#111;}
     .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
@@ -14,6 +14,7 @@
     .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
     .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
     button{padding:10px 14px;border:0;border-radius:10px;cursor:pointer;font-weight:800;}
+    button.danger{border:1px solid #c00;background:#fff;}
     .muted{color:#666;font-size:12px;}
     table{width:100%;border-collapse:collapse;margin-top:10px;}
     th,td{border-bottom:1px solid #eee;padding:8px 6px;vertical-align:top;}
@@ -21,6 +22,8 @@
     .right{text-align:right;}
     .pill{display:inline-block;padding:2px 8px;border:1px solid #ddd;border-radius:999px;font-size:12px;}
     a{word-break:break-all;}
+    .ok{color:#0a7;}
+    .err{color:#c00;}
   </style>
 </head>
 <body>
@@ -31,7 +34,8 @@
 
   <div class="card">
     <div class="muted">
-      Logo: optional from <b>logo.png</b>. If missing, Apps Script will use Drive logo automatically.
+      Logo is fixed from <b>config.js</b> via <code>window.LOGO_DATA_URL</code>.
+      <span id="logoState" class="pill">checking…</span>
     </div>
 
     <div class="row3">
@@ -99,7 +103,7 @@
       </div>
       <div style="display:flex;gap:8px;">
         <button onclick="savePreset()">Save first item</button>
-        <button onclick="clearPresets()">Clear presets</button>
+        <button class="danger" onclick="clearPresets()">Clear presets</button>
       </div>
     </div>
 
@@ -141,30 +145,37 @@
     </div>
   </div>
 
+  <!-- ✅ لازم يكون موجود في نفس المجلد -->
   <script src="./config.js"></script>
+
   <script>
     function apiUrl(){
-      const u = (window.APP_SCRIPT_URL || "").trim();
-      if(!u) throw new Error("APP_SCRIPT_URL missing in config.js");
+      const u = String(window.APP_SCRIPT_URL || "").trim();
+      if(!u || !u.includes("/exec")) throw new Error("APP_SCRIPT_URL missing/invalid in config.js");
       return u;
     }
 
-    // optional logo from site (if logo.png exists)
-    async function tryFetchLogoDataUrl(){
-      try{
-        const res = await fetch("./logo.png?v=" + Date.now(), { cache: "no-store" });
-        if(!res.ok) return "";
-        const blob = await res.blob();
-        return await new Promise((resolve, reject)=>{
-          const r = new FileReader();
-          r.onload = ()=> resolve(String(r.result||""));
-          r.onerror = ()=> reject(new Error("logo.png read failed"));
-          r.readAsDataURL(blob);
-        });
-      }catch{
-        return "";
-      }
+    // ✅ شعار ثابت من config.js
+    function getFixedLogoDataUrl(){
+      const v = String(window.LOGO_DATA_URL || "").trim();
+      if(!v.startsWith("data:image/")) throw new Error("LOGO_DATA_URL missing in config.js");
+      return v;
     }
+
+    // show logo status
+    (function(){
+      const el = document.getElementById("logoState");
+      try{
+        const v = getFixedLogoDataUrl();
+        el.textContent = "logo ok";
+        el.classList.add("ok");
+        // optional small validation
+        if(v.length < 200) el.textContent = "logo suspicious (too short)";
+      }catch(err){
+        el.textContent = "logo missing";
+        el.classList.add("err");
+      }
+    })();
 
     function renderPaymentFields(){
       const t = document.getElementById("payType").value;
@@ -229,7 +240,7 @@
         <td><input class="desc" placeholder="Service description" value="${pref.description ?? ""}"></td>
         <td class="right"><input class="unit" type="number" min="0" value="${pref.unitPrice ?? 0}"></td>
         <td class="right"><span class="amt">0</span></td>
-        <td class="right"><button onclick="removeRow(this)">X</button></td>
+        <td class="right"><button class="danger" onclick="removeRow(this)">X</button></td>
       `;
       tbody.appendChild(tr);
       tr.querySelectorAll("input").forEach(inp=> inp.addEventListener("input", calcTotal));
@@ -261,6 +272,7 @@
       document.getElementById("totalOut").textContent = currency + " " + total.toLocaleString();
     }
 
+    // default row
     addRow({ qty:1, description:"Social Media Management", unitPrice:15000 });
 
     // presets
@@ -312,17 +324,19 @@
     }
 
     async function createQuote(){
+      const out = document.getElementById("out");
+
       const clientName = document.getElementById("clientName").value.trim();
-      if(!clientName){ document.getElementById("out").innerHTML = "<b>Client Name required.</b>"; return; }
+      if(!clientName){ out.innerHTML = "<b class='err'>Client Name required.</b>"; return; }
 
       const currency = document.getElementById("currency").value;
       const items = getItems();
-      if(!items.length){ document.getElementById("out").innerHTML = "<b>Add at least one item.</b>"; return; }
+      if(!items.length){ out.innerHTML = "<b class='err'>Add at least one item.</b>"; return; }
 
-      document.getElementById("out").textContent = "Working...";
+      out.textContent = "Working...";
 
       try{
-        const logoDataUrl = await tryFetchLogoDataUrl(); // may be empty => script fallback to Drive
+        const logoDataUrl = getFixedLogoDataUrl();
 
         const data = {
           clientName,
@@ -345,13 +359,12 @@
 
         const json = await res.json();
         if(json.ok){
-          document.getElementById("out").innerHTML =
-            `Done — <b>${json.quoteNo}</b> — <a target="_blank" href="${json.pdfUrl}">Open PDF</a>`;
+          out.innerHTML = `Done — <b>${json.quoteNo}</b> — <a target="_blank" href="${json.pdfUrl}">Open PDF</a>`;
         } else {
-          document.getElementById("out").innerHTML = "<b>Error:</b> " + (json.message || "Unknown");
+          out.innerHTML = "<b class='err'>Error:</b> " + (json.message || "Unknown");
         }
       }catch(err){
-        document.getElementById("out").innerHTML = "<b>Error:</b> " + err.message;
+        out.innerHTML = "<b class='err'>Error:</b> " + err.message;
       }
     }
   </script>
