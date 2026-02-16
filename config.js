@@ -1,1 +1,3 @@
-window.APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwwP2JnY9C8IKa0AGurFXJki_zoRrqbiMY91EZirj-MLnPpWh5J9KtmhZcelrK6K4oL/exec";
+// config.js
+// ضع رابط Apps Script Web App (اللي ينتهي بـ /exec)
+window.APP_SCRIPT_URL = "PASTE_YOUR_APPS_SCRIPT_EXEC_URL_HERE";
