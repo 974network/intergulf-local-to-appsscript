@@ -1,145 +1,193 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Inter Gulf | Local Search</title>
+  <title>إنتر جلف | بحث</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
-    /* ... (الأنماط كما هي، مع إضافة بسيطة للجدول) ... */
-    body{font-family:Arial,sans-serif;max-width:860px;margin:24px auto;padding:0 16px;color:#111;}
-    .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
-    .brand{font-weight:900;font-size:18px;}
-    .card{border:1px solid #ddd;border-radius:14px;padding:16px;}
-    input{width:100%;padding:10px;border:1px solid #ccc;border-radius:10px;}
-    button{padding:10px 14px;border:0;border-radius:10px;cursor:pointer;font-weight:800;margin-top:10px;}
-    .muted{color:#666;font-size:12px;}
-    a{word-break:break-all;}
-    .danger{background:#ffe9e9;}
-    table{width:100%;border-collapse:collapse;margin-top:10px;}
-    th,td{border-bottom:1px solid #eee;padding:8px 6px;text-align:left;}
-    th{font-size:12px;}
-    .right{text-align:right;}
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+    }
+    
+    .search-box {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .search-box input {
+      flex: 1;
+      padding: 15px;
+      border: 2px solid #eef2f7;
+      border-radius: 12px;
+      font-size: 16px;
+    }
+    
+    .search-box button {
+      padding: 15px 30px;
+    }
+    
+    .result-card {
+      background: #f8fafd;
+      border-radius: 16px;
+      padding: 20px;
+      margin-top: 20px;
+    }
+    
+    .result-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #eef2f7;
+    }
+    
+    .result-label {
+      font-weight: 600;
+      color: #1e3c72;
+    }
+    
+    .result-value {
+      color: #333;
+    }
   </style>
 </head>
 <body>
-  <div class="top">
-    <div class="brand">Search Quote (Local)</div>
-    <a href="./index.html">Create</a>
-  </div>
+  <div class="container">
+    <div class="main-card">
+      <div class="app-header">
+        <div class="logo-brand">
+          إنتر جلف <span>بحث</span>
+        </div>
+        <div class="nav-links">
+          <a href="./index.html"><i class="fas fa-plus"></i> إنشاء جديد</a>
+        </div>
+      </div>
 
-  <div class="card">
-    <div class="muted">Example: IG-QUO-2026-0001</div>
-    <input id="q" placeholder="IG-QUO-2026-0001" />
-    <button onclick="searchQuote()">Search</button>
-
-    <div id="resultArea" style="margin-top:12px;"></div>
-    <div id="actions" style="margin-top:12px; display:none; gap:8px;"></div>
+      <div class="content">
+        <div class="glass-card">
+          <div class="card-title">
+            <h3><i class="fas fa-search"></i> بحث عن عرض سعر</h3>
+          </div>
+          
+          <div class="search-box">
+            <input id="quoteNo" placeholder="أدخل رقم عرض السعر (مثال: IG-QUO-2026-0001)">
+            <button class="btn btn-primary" onclick="searchQuote()">
+              <i class="fas fa-search"></i> بحث
+            </button>
+          </div>
+          
+          <div id="result"></div>
+          <div id="actions" style="display: none; margin-top: 20px;">
+            <button class="btn btn-danger" onclick="deleteQuote()">
+              <i class="fas fa-trash"></i> حذف PDF
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="./config.js"></script>
   <script>
-    function apiUrl(){
-      const u = (window.APP_SCRIPT_URL || "").trim();
-      if(!u || u.includes("PASTE_YOUR")) throw new Error("Set APP_SCRIPT_URL in config.js");
-      return u;
-    }
+    let currentQuoteNo = "";
 
-    let lastQuoteNo = "";
-    let lastResultJson = null;
-
-    function displayResult(json) {
-        if (!json.ok) {
-            document.getElementById("resultArea").innerHTML = "<b>Not found</b>";
-            document.getElementById("actions").style.display = "none";
-            return;
-        }
-
-        const pdfLink = (json.pdfUrl && json.pdfUrl !== "DELETED")
-            ? `<a target="_blank" href="${json.pdfUrl}">Open PDF</a>`
-            : `<b>PDF:</b> DELETED`;
-
-        let itemsHtml = '';
-        if (json.items && json.items.length > 0) {
-            itemsHtml = '<table><tr><th>Qty</th><th>Description</th><th class="right">Unit Price</th><th class="right">Amount</th></tr>';
-            json.items.forEach(item => {
-                const qty = Number(item.qty || 0);
-                const unit = Number(item.unitPrice || 0);
-                const amt = qty * unit;
-                itemsHtml += `<tr>
-                    <td>${qty}</td>
-                    <td>${item.description || ''}</td>
-                    <td class="right">${json.currency || ''} ${unit.toLocaleString()}</td>
-                    <td class="right"><b>${json.currency || ''} ${amt.toLocaleString()}</b></td>
-                </tr>`;
-            });
-            itemsHtml += `</table>`;
-        } else {
-            itemsHtml = `<p>Service: <b>${json.service || ''}</b></p>`;
-        }
-
-        document.getElementById("resultArea").innerHTML = `
-            <p>Client: <b>${json.clientName}</b></p>
-            <p>Quote: <b>${json.quoteNo}</b> | Date: ${json.createdAt || ''}</p>
-            ${itemsHtml}
-            <p>Total: <b>${json.currency || ''} ${Number(json.total || 0).toLocaleString()}</b></p>
-            <p>${pdfLink}</p>
-        `;
-
-        const actions = document.getElementById("actions");
-        actions.style.display = "flex";
-        actions.innerHTML = `
-            <button class="danger" onclick="deletePdf()">Delete PDF</button>
-        `;
-    }
-
-    async function searchQuote(){
-      const quoteNo = document.getElementById("q").value.trim();
-      lastQuoteNo = quoteNo;
-
-      if(!quoteNo){
-        document.getElementById("resultArea").innerHTML = "<b>Type Quote No.</b>";
+    async function searchQuote() {
+      const quoteNo = document.getElementById("quoteNo").value.trim();
+      currentQuoteNo = quoteNo;
+      
+      if (!quoteNo) {
+        document.getElementById("result").innerHTML = '<div class="message error">الرجاء إدخال رقم عرض السعر</div>';
         document.getElementById("actions").style.display = "none";
         return;
       }
 
-      document.getElementById("resultArea").textContent = "Searching...";
+      document.getElementById("result").innerHTML = '<div class="message info">جاري البحث...</div>';
       document.getElementById("actions").style.display = "none";
 
-      try{
+      try {
         const url = apiUrl() + "?action=search&quoteNo=" + encodeURIComponent(quoteNo);
         const res = await fetch(url);
         const json = await res.json();
-        lastResultJson = json;
-        displayResult(json);
 
-      }catch(err){
-        document.getElementById("resultArea").innerHTML = "<b>Error:</b> " + err.message;
+        if (json.ok) {
+          let itemsHtml = '';
+          if (json.items && json.items.length > 0) {
+            itemsHtml = '<table class="items-table"><tr><th>الخدمة</th><th>الكمية</th><th>سعر الوحدة</th></tr>';
+            json.items.forEach(item => {
+              itemsHtml += `<tr>
+                <td>${item.description || ''}</td>
+                <td>${item.qty || 1}</td>
+                <td>${json.currency || ''} ${item.unitPrice || 0}</td>
+              </tr>`;
+            });
+            itemsHtml += '</table>';
+          }
+
+          const pdfLink = (json.pdfUrl && json.pdfUrl !== "DELETED")
+            ? `<a href="${json.pdfUrl}" target="_blank" class="btn btn-success" style="margin-top: 15px;">
+                 <i class="fas fa-file-pdf"></i> عرض PDF
+               </a>`
+            : '<p class="message error">الملف محذوف</p>';
+
+          document.getElementById("result").innerHTML = `
+            <div class="result-card">
+              <div class="result-item">
+                <span class="result-label">رقم عرض السعر:</span>
+                <span class="result-value">${json.quoteNo}</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">العميل:</span>
+                <span class="result-value">${json.clientName}</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">التاريخ:</span>
+                <span class="result-value">${new Date(json.createdAt).toLocaleDateString('ar')}</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">المجموع:</span>
+                <span class="result-value">${json.currency || ''} ${json.total || 0}</span>
+              </div>
+              ${itemsHtml}
+              <div style="text-align: center; margin-top: 20px;">
+                ${pdfLink}
+              </div>
+            </div>
+          `;
+          
+          if (json.pdfUrl && json.pdfUrl !== "DELETED") {
+            document.getElementById("actions").style.display = "block";
+          }
+        } else {
+          document.getElementById("result").innerHTML = '<div class="message error">لم يتم العثور على عرض السعر</div>';
+        }
+      } catch (err) {
+        document.getElementById("result").innerHTML = '<div class="message error">خطأ: ' + err.message + '</div>';
       }
     }
 
-    async function deletePdf(){
-      if(!lastQuoteNo) return;
-      const ok = confirm("Delete PDF for " + lastQuoteNo + " ?\nThis moves the file to Drive Trash.");
-      if(!ok) return;
+    async function deleteQuote() {
+      if (!currentQuoteNo || !confirm(`هل أنت متأكد من حذف ملف PDF لعرض السعر ${currentQuoteNo}؟`)) {
+        return;
+      }
 
-      document.getElementById("resultArea").textContent = "Deleting...";
-
-      try{
+      try {
         const res = await fetch(apiUrl(), {
           method: "POST",
           headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action:"delete", quoteNo: lastQuoteNo })
+          body: JSON.stringify({ action: "delete", quoteNo: currentQuoteNo })
         });
 
         const json = await res.json();
-        if(json.ok){
-            // After deletion, refresh the search result to show "DELETED"
-            await searchQuote();
+        if (json.ok) {
+          document.getElementById("result").innerHTML = '<div class="message success">تم حذف الملف بنجاح</div>';
+          document.getElementById("actions").style.display = "none";
         } else {
-          document.getElementById("resultArea").innerHTML = "<b>Error:</b> " + (json.message || "Unknown");
+          document.getElementById("result").innerHTML = '<div class="message error">خطأ: ' + json.message + '</div>';
         }
-      }catch(err){
-        document.getElementById("resultArea").innerHTML = "<b>Error:</b> " + err.message;
+      } catch (err) {
+        document.getElementById("result").innerHTML = '<div class="message error">خطأ: ' + err.message + '</div>';
       }
     }
   </script>
