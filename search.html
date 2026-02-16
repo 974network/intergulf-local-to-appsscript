@@ -89,10 +89,17 @@
     </div>
   </div>
 
-  <script src="./config.js"></script>
+    <script src="./config.js"></script>
   <script>
-    let currentQuoteNo = "";
+    // تعريف دالة apiUrl
+    function apiUrl(){
+      const u = (window.APP_SCRIPT_URL || "").trim();
+      if(!u || u.includes("PASTE_YOUR")) throw new Error("ضع رابط التطبيق في config.js");
+      return u;
+    }
 
+    let currentQuoteNo = "";
+    
     async function searchQuote() {
       const quoteNo = document.getElementById("quoteNo").value.trim();
       currentQuoteNo = quoteNo;
