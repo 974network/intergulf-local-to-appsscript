@@ -183,8 +183,15 @@
     </div>
   </div>
 
-  <script src="./config.js"></script>
+    <script src="./config.js"></script>
   <script>
+    // تعريف دالة apiUrl
+    function apiUrl(){
+      const u = (window.APP_SCRIPT_URL || "").trim();
+      if(!u || u.includes("PASTE_YOUR")) throw new Error("ضع رابط التطبيق في config.js");
+      return u;
+    }
+
     // تحديث عرض حالة التوقيع
     function updateStatusDisplay() {
       const status = document.getElementById("signedStatus").value;
