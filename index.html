@@ -22,7 +22,6 @@
     .right{text-align:right;}
     .pill{display:inline-block;padding:2px 8px;border:1px solid #ddd;border-radius:999px;font-size:12px;}
     a{word-break:break-all;}
-    .ok{color:#0a7;}
     .err{color:#c00;}
   </style>
 </head>
@@ -34,8 +33,8 @@
 
   <div class="card">
     <div class="muted">
-      Logo is fixed from <b>config.js</b> via <code>window.LOGO_DATA_URL</code>.
-      <span id="logoState" class="pill">checking…</span>
+      Uses Apps Script backend to generate PDF and save it to Drive.
+      <span class="pill">local</span>
     </div>
 
     <div class="row3">
@@ -145,7 +144,7 @@
     </div>
   </div>
 
-  <!-- ✅ لازم يكون موجود في نفس المجلد -->
+  <!-- config.js must be in same folder -->
   <script src="./config.js"></script>
 
   <script>
@@ -154,28 +153,6 @@
       if(!u || !u.includes("/exec")) throw new Error("APP_SCRIPT_URL missing/invalid in config.js");
       return u;
     }
-
-    // ✅ شعار ثابت من config.js
-    function getFixedLogoDataUrl(){
-      const v = String(window.LOGO_DATA_URL || "").trim();
-      if(!v.startsWith("data:image/")) throw new Error("LOGO_DATA_URL missing in config.js");
-      return v;
-    }
-
-    // show logo status
-    (function(){
-      const el = document.getElementById("logoState");
-      try{
-        const v = getFixedLogoDataUrl();
-        el.textContent = "logo ok";
-        el.classList.add("ok");
-        // optional small validation
-        if(v.length < 200) el.textContent = "logo suspicious (too short)";
-      }catch(err){
-        el.textContent = "logo missing";
-        el.classList.add("err");
-      }
-    })();
 
     function renderPaymentFields(){
       const t = document.getElementById("payType").value;
@@ -325,6 +302,7 @@
 
     async function createQuote(){
       const out = document.getElementById("out");
+      out.innerHTML = "";
 
       const clientName = document.getElementById("clientName").value.trim();
       if(!clientName){ out.innerHTML = "<b class='err'>Client Name required.</b>"; return; }
@@ -336,8 +314,6 @@
       out.textContent = "Working...";
 
       try{
-        const logoDataUrl = getFixedLogoDataUrl();
-
         const data = {
           clientName,
           currency,
@@ -347,8 +323,7 @@
           website: document.getElementById("website").value,
           notes: document.getElementById("notes").value.trim(),
           terms: document.getElementById("terms").value.trim(),
-          payment: getPayment(),
-          logoDataUrl
+          payment: getPayment()
         };
 
         const res = await fetch(apiUrl(), {
