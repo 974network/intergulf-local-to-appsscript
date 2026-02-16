@@ -3,8 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Inter Gulf | Quotation Generator</title>
+  <title>Inter Gulf | Local Create Quote</title>
   <style>
+    /* ... (الأنماط كما هي، بدون تغيير) ... */
     body{font-family:Arial,sans-serif;max-width:980px;margin:24px auto;padding:0 16px;color:#111;}
     .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
     .brand{font-weight:900;font-size:18px;}
@@ -14,7 +15,6 @@
     .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
     .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
     button{padding:10px 14px;border:0;border-radius:10px;cursor:pointer;font-weight:800;}
-    button.danger{border:1px solid #c00;background:#fff;}
     .muted{color:#666;font-size:12px;}
     table{width:100%;border-collapse:collapse;margin-top:10px;}
     th,td{border-bottom:1px solid #eee;padding:8px 6px;vertical-align:top;}
@@ -22,20 +22,17 @@
     .right{text-align:right;}
     .pill{display:inline-block;padding:2px 8px;border:1px solid #ddd;border-radius:999px;font-size:12px;}
     a{word-break:break-all;}
-    .ok{color:#0a7;}
-    .err{color:#c00;}
   </style>
 </head>
 <body>
   <div class="top">
-    <div class="brand">Inter Gulf — Quotation</div>
+    <div class="brand">Inter Gulf — Local Quotation</div>
     <a href="./search.html">Search</a>
   </div>
 
   <div class="card">
     <div class="muted">
-      Connected to Apps Script.
-      <span id="apiState" class="pill">checking…</span>
+      Logo is fetched directly from Google Drive when generating PDF.
     </div>
 
     <div class="row3">
@@ -103,7 +100,7 @@
       </div>
       <div style="display:flex;gap:8px;">
         <button onclick="savePreset()">Save first item</button>
-        <button class="danger" onclick="clearPresets()">Clear presets</button>
+        <button onclick="clearPresets()">Clear presets</button>
       </div>
     </div>
 
@@ -146,184 +143,130 @@
   </div>
 
   <script src="./config.js"></script>
-
   <script>
     function apiUrl(){
-      var u = String(window.APP_SCRIPT_URL || "").trim();
-      if(!u || u.indexOf("/exec") === -1 || u.indexOf("PASTE_YOUR") !== -1){
-        throw new Error("Set APP_SCRIPT_URL in config.js (must be /exec)");
-      }
+      const u = (window.APP_SCRIPT_URL || "").trim();
+      if(!u || u.includes("PASTE_YOUR")) throw new Error("Set APP_SCRIPT_URL in config.js");
       return u;
     }
 
-    // status check (خفيف)
-    (function(){
-      var el = document.getElementById("apiState");
-      try{
-        apiUrl();
-        el.textContent = "api ok";
-        el.className = "pill ok";
-      }catch(e){
-        el.textContent = "api missing";
-        el.className = "pill err";
-      }
-    })();
-
     function renderPaymentFields(){
-      var t = document.getElementById("payType").value;
-      var el = document.getElementById("payFields");
+      const t = document.getElementById("payType").value;
+      const el = document.getElementById("payFields");
 
       if(t === "paypal"){
-        el.innerHTML =
-          '<div class="row">' +
-            '<div>' +
-              '<label>PayPal Email</label>' +
-              '<input id="paypalEmail" placeholder="name@example.com">' +
-            '</div>' +
-            '<div></div>' +
-          '</div>';
+        el.innerHTML = `
+          <div class="row">
+            <div>
+              <label>PayPal Email</label>
+              <input id="paypalEmail" placeholder="name@example.com">
+            </div>
+            <div></div>
+          </div>`;
       } else if(t === "bank"){
-        el.innerHTML =
-          '<div class="row">' +
-            '<div><label>Bank Name</label><input id="bankName" placeholder="Bank name"></div>' +
-            '<div><label>Holder</label><input id="holder" placeholder="Account holder"></div>' +
-          '</div>' +
-          '<div class="row">' +
-            '<div><label>IBAN</label><input id="iban" placeholder="IBAN"></div>' +
-            '<div><label>Account No.</label><input id="accountNo" placeholder="Account number"></div>' +
-          '</div>' +
-          '<div class="row">' +
-            '<div><label>SWIFT</label><input id="swift" placeholder="SWIFT"></div>' +
-            '<div></div>' +
-          '</div>';
+        el.innerHTML = `
+          <div class="row">
+            <div><label>Bank Name</label><input id="bankName" placeholder="Bank name"></div>
+            <div><label>Holder</label><input id="holder" placeholder="Account holder"></div>
+          </div>
+          <div class="row">
+            <div><label>IBAN</label><input id="iban" placeholder="IBAN"></div>
+            <div><label>Account No.</label><input id="accountNo" placeholder="Account number"></div>
+          </div>
+          <div class="row">
+            <div><label>SWIFT</label><input id="swift" placeholder="SWIFT"></div>
+            <div></div>
+          </div>`;
       } else if(t === "cash"){
-        el.innerHTML = '<div class="muted" style="margin-top:8px;">Cash payment selected.</div>';
+        el.innerHTML = `<div class="muted" style="margin-top:8px;">Cash payment selected.</div>`;
       } else {
         el.innerHTML = "";
       }
     }
     renderPaymentFields();
 
-    function val(id){
-      var el = document.getElementById(id);
-      return el ? String(el.value || "").trim() : "";
-    }
-
     function getPayment(){
-      var type = document.getElementById("payType").value;
+      const type = document.getElementById("payType").value;
       if(!type) return { type:"" };
-
       if(type === "paypal"){
-        return { type:"paypal", paypalEmail: val("paypalEmail") };
+        return { type:"paypal", paypalEmail: (document.getElementById("paypalEmail")?.value || "").trim() };
       }
       if(type === "bank"){
         return {
           type:"bank",
-          bankName: val("bankName"),
-          holder: val("holder"),
-          iban: val("iban"),
-          accountNo: val("accountNo"),
-          swift: val("swift")
+          bankName:(document.getElementById("bankName")?.value || "").trim(),
+          holder:(document.getElementById("holder")?.value || "").trim(),
+          iban:(document.getElementById("iban")?.value || "").trim(),
+          accountNo:(document.getElementById("accountNo")?.value || "").trim(),
+          swift:(document.getElementById("swift")?.value || "").trim()
         };
       }
       return { type:"cash" };
     }
 
-    var tbody = document.querySelector("#itemsTable tbody");
+    const tbody = document.querySelector("#itemsTable tbody");
 
-    function escapeAttr(s){
-      return String(s || "")
-        .replace(/&/g,"&amp;")
-        .replace(/"/g,"&quot;")
-        .replace(/</g,"&lt;")
-        .replace(/>/g,"&gt;");
-    }
-
-    function addRow(pref){
-      pref = pref || {};
-      var qty = (pref.qty != null) ? pref.qty : 1;
-      var desc = (pref.description != null) ? pref.description : "";
-      var unitPrice = (pref.unitPrice != null) ? pref.unitPrice : 0;
-
-      var tr = document.createElement("tr");
-      tr.innerHTML =
-        '<td><input class="qty" type="number" min="1" value="'+ qty +'"></td>' +
-        '<td><input class="desc" placeholder="Service description" value="'+ escapeAttr(desc) +'"></td>' +
-        '<td class="right"><input class="unit" type="number" min="0" value="'+ unitPrice +'"></td>' +
-        '<td class="right"><span class="amt">0</span></td>' +
-        '<td class="right"><button class="danger" onclick="removeRow(this)">X</button></td>';
-
+    function addRow(pref={}){
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><input class="qty" type="number" min="1" value="${pref.qty ?? 1}"></td>
+        <td><input class="desc" placeholder="Service description" value="${pref.description ?? ""}"></td>
+        <td class="right"><input class="unit" type="number" min="0" value="${pref.unitPrice ?? 0}" step="any"></td>
+        <td class="right"><span class="amt">0</span></td>
+        <td class="right"><button onclick="removeRow(this)">X</button></td>
+      `;
       tbody.appendChild(tr);
-
-      var inputs = tr.querySelectorAll("input");
-      for(var i=0;i<inputs.length;i++){
-        inputs[i].addEventListener("input", calcTotal);
-      }
+      tr.querySelectorAll("input").forEach(inp=> inp.addEventListener("input", calcTotal));
       calcTotal();
     }
 
-    function removeRow(btn){
-      var tr = btn.parentNode.parentNode;
-      tr.parentNode.removeChild(tr);
-      calcTotal();
-    }
+    function removeRow(btn){ btn.closest("tr").remove(); calcTotal(); }
 
     function getItems(){
-      var rows = tbody.querySelectorAll("tr");
-      var out = [];
-      for(var i=0;i<rows.length;i++){
-        var r = rows[i];
-        var qty = Number(r.querySelector(".qty").value || 0);
-        var description = String(r.querySelector(".desc").value || "").trim();
-        var unitPrice = Number(r.querySelector(".unit").value || 0);
-        if(description) out.push({ qty: qty, description: description, unitPrice: unitPrice });
-      }
-      return out;
+      const rows = [...tbody.querySelectorAll("tr")];
+      return rows.map(r=>{
+        const qty = Number(r.querySelector(".qty").value || 0);
+        const description = String(r.querySelector(".desc").value || "").trim();
+        const unitPrice = Number(r.querySelector(".unit").value || 0);
+        return { qty, description, unitPrice };
+      }).filter(x=>x.description);
     }
 
     function calcTotal(){
-      var currency = document.getElementById("currency").value;
-      var total = 0;
-      var rows = tbody.querySelectorAll("tr");
-      for(var i=0;i<rows.length;i++){
-        var r = rows[i];
-        var qty = Number(r.querySelector(".qty").value || 0);
-        var unit = Number(r.querySelector(".unit").value || 0);
-        var amt = qty*unit;
-        r.querySelector(".amt").textContent = currency + " " + amt.toLocaleString();
+      const currency = document.getElementById("currency").value;
+      let total = 0;
+      [...tbody.querySelectorAll("tr")].forEach(r=>{
+        const qty = Number(r.querySelector(".qty").value || 0);
+        const unit = Number(r.querySelector(".unit").value || 0);
+        const amt = qty*unit;
+        r.querySelector(".amt").textContent = currency + " " + amt.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
         total += amt;
-      }
-      document.getElementById("totalOut").textContent = currency + " " + total.toLocaleString();
+      });
+      document.getElementById("totalOut").textContent = currency + " " + total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
     }
 
-    // default row (مثل اللي عندك)
+    // default row
     addRow({ qty:1, description:"Social Media Management", unitPrice:15000 });
 
-    // presets (نفس فكرتك)
-    var PRESET_KEY = "ig_service_presets_v1";
-    function loadPresets(){ try { return JSON.parse(localStorage.getItem(PRESET_KEY) || "[]"); } catch(e){ return []; } }
+    // presets
+    const PRESET_KEY = "ig_service_presets_v1";
+    function loadPresets(){ try { return JSON.parse(localStorage.getItem(PRESET_KEY) || "[]"); } catch { return []; } }
     function savePresets(p){ localStorage.setItem(PRESET_KEY, JSON.stringify(p)); }
-
     function refreshPresetPick(){
-      var presets = loadPresets();
-      var sel = document.getElementById("presetPick");
-      var html = '<option value="">—</option>';
-      for(var i=0;i<presets.length;i++){
-        html += '<option value="'+ i +'">'+ escapeAttr(presets[i].name) +'</option>';
-      }
-      sel.innerHTML = html;
+      const presets = loadPresets();
+      const sel = document.getElementById("presetPick");
+      sel.innerHTML = `<option value="">—</option>` + presets.map((p,i)=>`<option value="${i}">${p.name}</option>`).join("");
     }
     refreshPresetPick();
 
     function savePreset(){
-      var items = getItems();
+      const items = getItems();
       if(!items.length){ alert("Add at least one item first."); return; }
-      var first = items[0];
-      var name = prompt("Preset name:", first.description);
+      const first = items[0];
+      const name = prompt("Preset name:", first.description);
       if(!name) return;
-
-      var presets = loadPresets();
-      presets.push({ name: name, qty:first.qty, description:first.description, unitPrice:first.unitPrice });
+      const presets = loadPresets();
+      presets.push({ name, qty:first.qty, description:first.description, unitPrice:first.unitPrice });
       savePresets(presets);
       refreshPresetPick();
       alert("Saved.");
@@ -336,14 +279,13 @@
     }
 
     function applyPreset(){
-      var idx = document.getElementById("presetPick").value;
+      const idx = document.getElementById("presetPick").value;
       if(idx === "") return;
-
-      var presets = loadPresets();
-      var p = presets[Number(idx)];
+      const presets = loadPresets();
+      const p = presets[Number(idx)];
       if(!p) return;
 
-      var firstRow = tbody.querySelector("tr");
+      const firstRow = tbody.querySelector("tr");
       if(!firstRow){
         addRow({ qty:p.qty, description:p.description, unitPrice:p.unitPrice });
       } else {
@@ -354,57 +296,45 @@
       }
     }
 
-    // ES5 request (بدون fetch/await)
-    function postJson(url, obj, cb){
-      var xhr = new XMLHttpRequest();
-      xhr.open("POST", url, true);
-      xhr.setRequestHeader("Content-Type", "text/plain;charset=utf-8");
-      xhr.onreadystatechange = function(){
-        if(xhr.readyState !== 4) return;
-        cb(xhr.status, xhr.responseText);
-      };
-      xhr.send(JSON.stringify(obj));
-    }
+    async function createQuote(){
+      const clientName = document.getElementById("clientName").value.trim();
+      if(!clientName){ document.getElementById("out").innerHTML = "<b>Client Name required.</b>"; return; }
 
-    function createQuote(){
-      var out = document.getElementById("out");
-      out.innerHTML = "";
+      const currency = document.getElementById("currency").value;
+      const items = getItems();
+      if(!items.length){ document.getElementById("out").innerHTML = "<b>Add at least one item.</b>"; return; }
 
-      var clientName = document.getElementById("clientName").value.trim();
-      if(!clientName){ out.innerHTML = "<b class='err'>Client Name required.</b>"; return; }
+      document.getElementById("out").textContent = "Working...";
 
-      var items = getItems();
-      if(!items.length){ out.innerHTML = "<b class='err'>Add at least one item.</b>"; return; }
+      try{
+        const data = {
+          clientName,
+          currency,
+          items,
+          startDate: document.getElementById("startDate").value,
+          endDate: document.getElementById("endDate").value,
+          website: document.getElementById("website").value,
+          notes: document.getElementById("notes").value.trim(),
+          terms: document.getElementById("terms").value.trim(),
+          payment: getPayment()
+        };
 
-      out.textContent = "Working...";
+        const res = await fetch(apiUrl(), {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action:"create", data })
+        });
 
-      var data = {
-        clientName: clientName,
-        currency: document.getElementById("currency").value,
-        items: items,
-        startDate: document.getElementById("startDate").value,
-        endDate: document.getElementById("endDate").value,
-        website: document.getElementById("website").value,
-        notes: document.getElementById("notes").value.trim(),
-        terms: document.getElementById("terms").value.trim(),
-        payment: getPayment()
-      };
-
-      var url = apiUrl();
-      postJson(url, { action:"create", data:data }, function(status, text){
-        var json;
-        try { json = JSON.parse(text); }
-        catch(e){
-          out.innerHTML = "<b class='err'>Server returned non-JSON:</b><br><pre style='white-space:pre-wrap'>" + escapeAttr(text) + "</pre>";
-          return;
-        }
-
+        const json = await res.json();
         if(json.ok){
-          out.innerHTML = "Done — <b>" + json.quoteNo + "</b> — <a target='_blank' href='" + json.pdfUrl + "'>Open PDF</a>";
+          document.getElementById("out").innerHTML =
+            `Done — <b>${json.quoteNo}</b> — <a target="_blank" href="${json.pdfUrl}">Open PDF</a>`;
         } else {
-          out.innerHTML = "<b class='err'>Error:</b> " + (json.message || "Unknown");
+          document.getElementById("out").innerHTML = "<b>Error:</b> " + (json.message || "Unknown");
         }
-      });
+      }catch(err){
+        document.getElementById("out").innerHTML = "<b>Error:</b> " + err.message;
+      }
     }
   </script>
 </body>
