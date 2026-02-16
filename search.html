@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Inter Gulf | Local Search</title>
   <style>
+    /* ... (الأنماط كما هي، مع إضافة بسيطة للجدول) ... */
     body{font-family:Arial,sans-serif;max-width:860px;margin:24px auto;padding:0 16px;color:#111;}
     .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
     .brand{font-weight:900;font-size:18px;}
@@ -14,7 +15,10 @@
     .muted{color:#666;font-size:12px;}
     a{word-break:break-all;}
     .danger{background:#ffe9e9;}
-    .err{color:#c00;}
+    table{width:100%;border-collapse:collapse;margin-top:10px;}
+    th,td{border-bottom:1px solid #eee;padding:8px 6px;text-align:left;}
+    th{font-size:12px;}
+    .right{text-align:right;}
   </style>
 </head>
 <body>
@@ -28,122 +32,115 @@
     <input id="q" placeholder="IG-QUO-2026-0001" />
     <button onclick="searchQuote()">Search</button>
 
-    <div id="out" style="margin-top:12px;"></div>
+    <div id="resultArea" style="margin-top:12px;"></div>
     <div id="actions" style="margin-top:12px; display:none; gap:8px;"></div>
   </div>
 
   <script src="./config.js"></script>
   <script>
     function apiUrl(){
-      var u = String(window.APP_SCRIPT_URL || "").trim();
-      if(!u || u.indexOf("/exec") === -1 || u.indexOf("PASTE_YOUR") !== -1){
-        throw new Error("Set APP_SCRIPT_URL in config.js");
-      }
+      const u = (window.APP_SCRIPT_URL || "").trim();
+      if(!u || u.includes("PASTE_YOUR")) throw new Error("Set APP_SCRIPT_URL in config.js");
       return u;
     }
 
-    var lastQuoteNo = "";
+    let lastQuoteNo = "";
+    let lastResultJson = null;
 
-    function escapeHtml(s){
-      return String(s || "")
-        .replace(/&/g,"&amp;")
-        .replace(/</g,"&lt;")
-        .replace(/>/g,"&gt;")
-        .replace(/"/g,"&quot;");
+    function displayResult(json) {
+        if (!json.ok) {
+            document.getElementById("resultArea").innerHTML = "<b>Not found</b>";
+            document.getElementById("actions").style.display = "none";
+            return;
+        }
+
+        const pdfLink = (json.pdfUrl && json.pdfUrl !== "DELETED")
+            ? `<a target="_blank" href="${json.pdfUrl}">Open PDF</a>`
+            : `<b>PDF:</b> DELETED`;
+
+        let itemsHtml = '';
+        if (json.items && json.items.length > 0) {
+            itemsHtml = '<table><tr><th>Qty</th><th>Description</th><th class="right">Unit Price</th><th class="right">Amount</th></tr>';
+            json.items.forEach(item => {
+                const qty = Number(item.qty || 0);
+                const unit = Number(item.unitPrice || 0);
+                const amt = qty * unit;
+                itemsHtml += `<tr>
+                    <td>${qty}</td>
+                    <td>${item.description || ''}</td>
+                    <td class="right">${json.currency || ''} ${unit.toLocaleString()}</td>
+                    <td class="right"><b>${json.currency || ''} ${amt.toLocaleString()}</b></td>
+                </tr>`;
+            });
+            itemsHtml += `</table>`;
+        } else {
+            itemsHtml = `<p>Service: <b>${json.service || ''}</b></p>`;
+        }
+
+        document.getElementById("resultArea").innerHTML = `
+            <p>Client: <b>${json.clientName}</b></p>
+            <p>Quote: <b>${json.quoteNo}</b> | Date: ${json.createdAt || ''}</p>
+            ${itemsHtml}
+            <p>Total: <b>${json.currency || ''} ${Number(json.total || 0).toLocaleString()}</b></p>
+            <p>${pdfLink}</p>
+        `;
+
+        const actions = document.getElementById("actions");
+        actions.style.display = "flex";
+        actions.innerHTML = `
+            <button class="danger" onclick="deletePdf()">Delete PDF</button>
+        `;
     }
 
-    function getJson(url, cb){
-      var xhr = new XMLHttpRequest();
-      xhr.open("GET", url, true);
-      xhr.onreadystatechange = function(){
-        if(xhr.readyState !== 4) return;
-        cb(xhr.status, xhr.responseText);
-      };
-      xhr.send();
-    }
-
-    function postJson(url, obj, cb){
-      var xhr = new XMLHttpRequest();
-      xhr.open("POST", url, true);
-      xhr.setRequestHeader("Content-Type", "text/plain;charset=utf-8");
-      xhr.onreadystatechange = function(){
-        if(xhr.readyState !== 4) return;
-        cb(xhr.status, xhr.responseText);
-      };
-      xhr.send(JSON.stringify(obj));
-    }
-
-    function searchQuote(){
-      var quoteNo = document.getElementById("q").value.trim();
+    async function searchQuote(){
+      const quoteNo = document.getElementById("q").value.trim();
       lastQuoteNo = quoteNo;
 
-      var out = document.getElementById("out");
-      var actions = document.getElementById("actions");
-
       if(!quoteNo){
-        out.innerHTML = "<b>Type Quote No.</b>";
-        actions.style.display = "none";
+        document.getElementById("resultArea").innerHTML = "<b>Type Quote No.</b>";
+        document.getElementById("actions").style.display = "none";
         return;
       }
 
-      out.textContent = "Searching...";
-      actions.style.display = "none";
+      document.getElementById("resultArea").textContent = "Searching...";
+      document.getElementById("actions").style.display = "none";
 
-      var url = apiUrl() + "?action=search&quoteNo=" + encodeURIComponent(quoteNo);
+      try{
+        const url = apiUrl() + "?action=search&quoteNo=" + encodeURIComponent(quoteNo);
+        const res = await fetch(url);
+        const json = await res.json();
+        lastResultJson = json;
+        displayResult(json);
 
-      getJson(url, function(status, text){
-        var json;
-        try { json = JSON.parse(text); }
-        catch(e){
-          out.innerHTML = "<b class='err'>Server returned non-JSON:</b><br><pre style='white-space:pre-wrap'>" + escapeHtml(text) + "</pre>";
-          return;
-        }
-
-        if(json.ok){
-          var pdfLink = (json.pdfUrl && json.pdfUrl !== "DELETED")
-            ? "<a target='_blank' href='" + escapeHtml(json.pdfUrl) + "'>Open PDF</a>"
-            : "<b>PDF:</b> DELETED";
-
-          out.innerHTML =
-            "Client: <b>" + escapeHtml(json.clientName) + "</b><br>" +
-            "Service: " + escapeHtml(json.service) + "<br>" +
-            "Quote: <b>" + escapeHtml(json.quoteNo) + "</b><br>" +
-            pdfLink;
-
-          actions.style.display = "flex";
-          actions.innerHTML = "<button class='danger' onclick='deletePdf()'>Delete PDF</button>";
-        } else {
-          out.innerHTML = "<b>Not found</b>";
-        }
-      });
+      }catch(err){
+        document.getElementById("resultArea").innerHTML = "<b>Error:</b> " + err.message;
+      }
     }
 
-    function deletePdf(){
+    async function deletePdf(){
       if(!lastQuoteNo) return;
-
-      var ok = confirm("Delete PDF for " + lastQuoteNo + " ?\nThis moves the file to Drive Trash.");
+      const ok = confirm("Delete PDF for " + lastQuoteNo + " ?\nThis moves the file to Drive Trash.");
       if(!ok) return;
 
-      var out = document.getElementById("out");
-      var actions = document.getElementById("actions");
+      document.getElementById("resultArea").textContent = "Deleting...";
 
-      out.textContent = "Deleting...";
+      try{
+        const res = await fetch(apiUrl(), {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action:"delete", quoteNo: lastQuoteNo })
+        });
 
-      postJson(apiUrl(), { action:"delete", quoteNo:lastQuoteNo }, function(status, text){
-        var json;
-        try { json = JSON.parse(text); }
-        catch(e){
-          out.innerHTML = "<b class='err'>Server returned non-JSON:</b><br><pre style='white-space:pre-wrap'>" + escapeHtml(text) + "</pre>";
-          return;
-        }
-
+        const json = await res.json();
         if(json.ok){
-          out.innerHTML = "<b>Deleted.</b><br>" + escapeHtml(json.message || "");
-          actions.style.display = "none";
+            // After deletion, refresh the search result to show "DELETED"
+            await searchQuote();
         } else {
-          out.innerHTML = "<b class='err'>Error:</b> " + escapeHtml(json.message || "Unknown");
+          document.getElementById("resultArea").innerHTML = "<b>Error:</b> " + (json.message || "Unknown");
         }
-      });
+      }catch(err){
+        document.getElementById("resultArea").innerHTML = "<b>Error:</b> " + err.message;
+      }
     }
   </script>
 </body>
