@@ -151,16 +151,11 @@
 
     // ✅ Load local logo.png and convert to data URL (Base64)
     async function fetchLogoDataUrl(){
-      const res = await fetch("./logo.png", { cache: "no-store" });
-      if(!res.ok) throw new Error("logo.png not found. Put it in public/logo.png");
-      const blob = await res.blob();
-      return await new Promise((resolve, reject)=>{
-        const r = new FileReader();
-        r.onload = ()=> resolve(String(r.result||""));
-        r.onerror = ()=> reject(new Error("logo.png read failed"));
-        r.readAsDataURL(blob);
-      });
-    }
+  const v = (window.LOGO_DATA_URL || "").trim();
+  if(v.startsWith("data:image/")) return v;
+  throw new Error("LOGO_DATA_URL is missing in config.js");
+}
+
 
     function renderPaymentFields(){
       const t = document.getElementById("payType").value;
