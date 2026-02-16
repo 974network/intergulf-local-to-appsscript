@@ -1,76 +1,100 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Inter Gulf | Local Create Quote</title>
+  <title>إنتر جلف | إنشاء عرض سعر</title>
   <link rel="stylesheet" href="style.css">
-  <!-- Font Awesome للأيقونات -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    /* تعديلات للغة العربية */
+    body {
+      font-family: 'Segoe UI', 'Arial', sans-serif;
+    }
+    
+    .input-group label i {
+      margin-left: 8px;
+      margin-right: 0;
+    }
+    
+    .items-table th,
+    .items-table td {
+      text-align: right;
+    }
+    
+    .items-table td:last-child {
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
     <div class="main-card">
       <div class="app-header">
         <div class="logo-brand">
-          Inter Gulf <span>Local Quote</span>
+          إنتر جلف <span>عرض سعر</span>
         </div>
         <div class="nav-links">
-          <a href="./search.html"><i class="fas fa-search"></i> Search</a>
+          <a href="./search.html"><i class="fas fa-search"></i> بحث</a>
         </div>
       </div>
 
       <div class="content">
-        <!-- قسم العميل -->
+        <!-- معلومات العميل -->
         <div class="glass-card">
           <div class="card-title">
-            <h3><i class="fas fa-user"></i> Client Information</h3>
+            <h3><i class="fas fa-user"></i> معلومات العميل</h3>
           </div>
           
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
             <div class="input-group">
-              <label><i class="fas fa-user-tie"></i> Client Name *</label>
-              <input id="clientName" placeholder="Enter client name">
+              <label><i class="fas fa-user-tie"></i> اسم العميل *</label>
+              <input id="clientName" placeholder="أدخل اسم العميل">
             </div>
             
             <div class="input-group">
-              <label><i class="fas fa-money-bill"></i> Currency</label>
+              <label><i class="fas fa-money-bill"></i> العملة</label>
               <select id="currency" onchange="calcTotal()">
-                <option value="QAR">QAR - Qatari Riyal</option>
-                <option value="USD">USD - US Dollar</option>
-                <option value="EUR">EUR - Euro</option>
-                <option value="TRY">TRY - Turkish Lira</option>
+                <option value="QAR">ريال قطري</option>
+                <option value="USD">دولار أمريكي</option>
+                <option value="EUR">يورو</option>
+                <option value="TRY">ليرة تركية</option>
               </select>
             </div>
             
+            <!-- قسم حالة التوقيع (بدلاً من Website?) -->
             <div class="input-group">
-              <label><i class="fas fa-globe"></i> Website?</label>
-              <select id="website">
-                <option value="No">No</option>
-                <option value="Yes">Yes</option>
-              </select>
+              <label><i class="fas fa-signature"></i> حالة العرض</label>
+              <div class="status-container">
+                <select id="signedStatus" onchange="updateStatusDisplay()" style="flex: 1;">
+                  <option value="pending">⏳ قيد الانتظار</option>
+                  <option value="signed">✅ تم التوقيع</option>
+                  <option value="approved">📋 معتمد</option>
+                </select>
+                <div id="statusBadge" class="status-badge status-pending">⏳ قيد الانتظار</div>
+              </div>
             </div>
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
             <div class="input-group">
-              <label><i class="fas fa-calendar"></i> Start Date</label>
+              <label><i class="fas fa-calendar"></i> تاريخ البداية</label>
               <input id="startDate" type="date">
             </div>
             <div class="input-group">
-              <label><i class="fas fa-calendar"></i> End Date</label>
+              <label><i class="fas fa-calendar"></i> تاريخ النهاية</label>
               <input id="endDate" type="date">
             </div>
           </div>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
             <div class="input-group">
-              <label><i class="fas fa-credit-card"></i> Payment Method</label>
+              <label><i class="fas fa-credit-card"></i> طريقة الدفع</label>
               <select id="payType" onchange="renderPaymentFields()">
-                <option value="">— Select Payment —</option>
+                <option value="">— اختر طريقة الدفع —</option>
                 <option value="paypal">PayPal</option>
-                <option value="bank">Bank Transfer</option>
-                <option value="cash">Cash</option>
+                <option value="bank">تحويل بنكي</option>
+                <option value="cash">نقداً</option>
               </select>
             </div>
             <div></div>
@@ -79,50 +103,50 @@
           <div id="payFields" style="margin-top: 15px;"></div>
 
           <div class="input-group" style="margin-top: 15px;">
-            <label><i class="fas fa-sticky-note"></i> Notes</label>
-            <textarea id="notes" rows="2" placeholder="Any additional notes..."></textarea>
+            <label><i class="fas fa-sticky-note"></i> ملاحظات</label>
+            <textarea id="notes" rows="2" placeholder="ملاحظات إضافية..."></textarea>
           </div>
 
           <div class="input-group" style="margin-top: 15px;">
-            <label><i class="fas fa-file-contract"></i> Terms</label>
-            <textarea id="terms" rows="3" placeholder="Terms and conditions..."></textarea>
+            <label><i class="fas fa-file-contract"></i> الشروط والأحكام</label>
+            <textarea id="terms" rows="3" placeholder="اترك فارغاً للشروط الافتراضية"></textarea>
           </div>
         </div>
 
-        <!-- قسم الخدمات المحفوظة -->
+        <!-- الخدمات المحفوظة -->
         <div class="glass-card">
           <div class="card-title">
-            <h3><i class="fas fa-save"></i> Saved Services</h3>
+            <h3><i class="fas fa-save"></i> الخدمات المحفوظة</h3>
             <div style="display: flex; gap: 8px;">
-              <button class="btn btn-outline" onclick="savePreset()"><i class="fas fa-save"></i> Save</button>
-              <button class="btn btn-outline" onclick="clearPresets()"><i class="fas fa-trash"></i> Clear</button>
+              <button class="btn btn-outline" onclick="savePreset()"><i class="fas fa-save"></i> حفظ</button>
+              <button class="btn btn-outline" onclick="clearPresets()"><i class="fas fa-trash"></i> مسح</button>
             </div>
           </div>
           
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
             <div class="input-group">
-              <label>Pick Preset</label>
+              <label>اختر خدمة محفوظة</label>
               <select id="presetPick" onchange="applyPreset()"></select>
             </div>
           </div>
         </div>
 
-        <!-- قسم العناصر -->
+        <!-- جدول الخدمات -->
         <div class="glass-card">
           <div class="card-title">
-            <h3><i class="fas fa-list"></i> Items</h3>
-            <button class="btn btn-primary" onclick="addRow()"><i class="fas fa-plus"></i> Add Item</button>
+            <h3><i class="fas fa-list"></i> الخدمات</h3>
+            <button class="btn btn-primary" onclick="addRow()"><i class="fas fa-plus"></i> إضافة خدمة</button>
           </div>
 
           <div class="table-container">
             <table class="items-table" id="itemsTable">
               <thead>
                 <tr>
-                  <th style="width:10%;">Qty</th>
-                  <th>Description</th>
-                  <th class="right" style="width:20%;">Unit Price</th>
-                  <th class="right" style="width:20%;">Amount</th>
-                  <th style="width:10%;"></th>
+                  <th style="width:10%;">الكمية</th>
+                  <th style="width:50%;">الوصف</th>
+                  <th style="width:20%;">سعر الوحدة</th>
+                  <th style="width:15%;">الإجمالي</th>
+                  <th style="width:5%;"></th>
                 </tr>
               </thead>
               <tbody></tbody>
@@ -130,64 +154,288 @@
           </div>
 
           <div class="total-section">
-            <span class="total-label"><i class="fas fa-calculator"></i> Total Amount:</span>
+            <span class="total-label"><i class="fas fa-calculator"></i> المجموع النهائي:</span>
             <span class="total-amount" id="totalOut">0</span>
           </div>
 
-          <!-- زر تحميل PDF ومعاينة -->
           <button class="btn btn-success download-btn" onclick="createQuote()">
-            <i class="fas fa-file-pdf"></i> Generate & Download PDF
+            <i class="fas fa-file-pdf"></i> إنشاء وتحميل PDF
           </button>
 
           <!-- معاينة PDF -->
-          <div class="pdf-preview" id="pdfPreview" style="display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-              <h4><i class="fas fa-eye"></i> PDF Preview</h4>
-              <a href="#" id="pdfDownloadLink" download style="display: none;">Download</a>
+          <div id="pdfPreview" class="pdf-preview">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+              <h4><i class="fas fa-eye"></i> معاينة PDF</h4>
+              <a href="#" id="pdfDownloadLink" target="_blank" class="btn btn-primary" style="display: none;">
+                <i class="fas fa-download"></i> تحميل PDF
+              </a>
             </div>
-            <iframe id="pdfFrame" src="about:blank"></iframe>
+            <iframe id="pdfFrame" src="about:blank" title="PDF Preview"></iframe>
           </div>
 
-          <div id="out" style="margin-top: 15px; text-align: center;"></div>
+          <div id="message"></div>
         </div>
       </div>
 
       <div class="footer">
-        <p>Inter Gulf W.L.L © 2026 - Professional Quotation System</p>
+        <p>إنتر جلف © 2026 - جميع الحقوق محفوظة</p>
       </div>
     </div>
   </div>
 
   <script src="./config.js"></script>
   <script>
-    // ... الكود القديم نفسه مع بعض الإضافات ...
-    // (كل الكود اللي كان موجود نتركه كما هو، ونضيف عليه التالي)
+    // تحديث عرض حالة التوقيع
+    function updateStatusDisplay() {
+      const status = document.getElementById("signedStatus").value;
+      const badge = document.getElementById("statusBadge");
+      
+      badge.className = "status-badge";
+      
+      if (status === "pending") {
+        badge.className += " status-pending";
+        badge.innerHTML = "⏳ قيد الانتظار";
+      } else if (status === "signed") {
+        badge.className += " status-signed";
+        badge.innerHTML = "✅ تم التوقيع";
+      } else if (status === "approved") {
+        badge.className += " status-approved";
+        badge.innerHTML = "📋 معتمد";
+      }
+    }
+
+    // حقول الدفع
+    function renderPaymentFields() {
+      const type = document.getElementById("payType").value;
+      const container = document.getElementById("payFields");
+      
+      if (type === "paypal") {
+        container.innerHTML = `
+          <div class="input-group">
+            <label><i class="fab fa-paypal"></i> البريد الإلكتروني لـ PayPal</label>
+            <input id="paypalEmail" placeholder="email@example.com">
+          </div>
+        `;
+      } else if (type === "bank") {
+        container.innerHTML = `
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div class="input-group">
+              <label>اسم البنك</label>
+              <input id="bankName" placeholder="اسم البنك">
+            </div>
+            <div class="input-group">
+              <label>صاحب الحساب</label>
+              <input id="holder" placeholder="الاسم الكامل">
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px;">
+            <div class="input-group">
+              <label>IBAN</label>
+              <input id="iban" placeholder="رقم IBAN">
+            </div>
+            <div class="input-group">
+              <label>رقم الحساب</label>
+              <input id="accountNo" placeholder="رقم الحساب">
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px;">
+            <div class="input-group">
+              <label>SWIFT</label>
+              <input id="swift" placeholder="رمز SWIFT">
+            </div>
+            <div></div>
+          </div>
+        `;
+      } else if (type === "cash") {
+        container.innerHTML = `<p style="color: #666;"><i class="fas fa-money-bill-wave"></i> الدفع نقداً</p>`;
+      } else {
+        container.innerHTML = "";
+      }
+    }
     
-    // تحديث دالة createQuote لعرض معاينة PDF
+    // جمع بيانات الدفع
+    function getPayment() {
+      const type = document.getElementById("payType").value;
+      if (!type) return { type: "" };
+      
+      if (type === "paypal") {
+        return {
+          type: "paypal",
+          paypalEmail: document.getElementById("paypalEmail")?.value || ""
+        };
+      } else if (type === "bank") {
+        return {
+          type: "bank",
+          bankName: document.getElementById("bankName")?.value || "",
+          holder: document.getElementById("holder")?.value || "",
+          iban: document.getElementById("iban")?.value || "",
+          accountNo: document.getElementById("accountNo")?.value || "",
+          swift: document.getElementById("swift")?.value || ""
+        };
+      }
+      return { type: "cash" };
+    }
+
+    // جدول العناصر
+    const tbody = document.querySelector("#itemsTable tbody");
+
+    function addRow(pref = {}) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><input class="qty" type="number" min="1" value="${pref.qty ?? 1}"></td>
+        <td><input class="desc" placeholder="وصف الخدمة" value="${pref.description ?? ""}"></td>
+        <td><input class="unit" type="number" min="0" value="${pref.unitPrice ?? 0}"></td>
+        <td class="amt">0</td>
+        <td><button class="btn btn-danger" style="padding: 5px 10px;" onclick="removeRow(this)"><i class="fas fa-times"></i></button></td>
+      `;
+      tbody.appendChild(tr);
+      
+      tr.querySelectorAll("input").forEach(inp => inp.addEventListener("input", calcTotal));
+      calcTotal();
+    }
+
+    function removeRow(btn) {
+      btn.closest("tr").remove();
+      calcTotal();
+    }
+
+    function getItems() {
+      const rows = [...tbody.querySelectorAll("tr")];
+      return rows.map(r => {
+        const qty = Number(r.querySelector(".qty").value || 0);
+        const description = r.querySelector(".desc").value?.trim() || "";
+        const unitPrice = Number(r.querySelector(".unit").value || 0);
+        return { qty, description, unitPrice };
+      }).filter(x => x.description);
+    }
+
+    function calcTotal() {
+      const currency = document.getElementById("currency").value;
+      let total = 0;
+      
+      [...tbody.querySelectorAll("tr")].forEach(r => {
+        const qty = Number(r.querySelector(".qty").value || 0);
+        const unit = Number(r.querySelector(".unit").value || 0);
+        const amt = qty * unit;
+        r.querySelector(".amt").textContent = amt.toLocaleString() + " " + currency;
+        total += amt;
+      });
+      
+      document.getElementById("totalOut").textContent = total.toLocaleString() + " " + currency;
+    }
+
+    // الصف الافتراضي
+    addRow({ qty: 1, description: "إدارة وسائل التواصل", unitPrice: 15000 });
+
+    // القوالب المحفوظة
+    const PRESET_KEY = "ig_service_presets";
+    
+    function loadPresets() {
+      try {
+        return JSON.parse(localStorage.getItem(PRESET_KEY) || "[]");
+      } catch {
+        return [];
+      }
+    }
+    
+    function savePresets(presets) {
+      localStorage.setItem(PRESET_KEY, JSON.stringify(presets));
+    }
+    
+    function refreshPresetPick() {
+      const presets = loadPresets();
+      const sel = document.getElementById("presetPick");
+      sel.innerHTML = '<option value="">— اختر —</option>' + 
+        presets.map((p, i) => `<option value="${i}">${p.name}</option>`).join("");
+    }
+    
+    refreshPresetPick();
+
+    function savePreset() {
+      const items = getItems();
+      if (!items.length) {
+        showMessage("أضف خدمة أولاً", "error");
+        return;
+      }
+      
+      const first = items[0];
+      const name = prompt("اسم القالب:", first.description);
+      if (!name) return;
+      
+      const presets = loadPresets();
+      presets.push({ 
+        name, 
+        qty: first.qty, 
+        description: first.description, 
+        unitPrice: first.unitPrice 
+      });
+      
+      savePresets(presets);
+      refreshPresetPick();
+      showMessage("تم الحفظ", "success");
+    }
+
+    function clearPresets() {
+      if (!confirm("مسح جميع القوالب المحفوظة؟")) return;
+      savePresets([]);
+      refreshPresetPick();
+      showMessage("تم المسح", "success");
+    }
+
+    function applyPreset() {
+      const idx = document.getElementById("presetPick").value;
+      if (idx === "") return;
+      
+      const presets = loadPresets();
+      const p = presets[Number(idx)];
+      if (!p) return;
+
+      const firstRow = tbody.querySelector("tr");
+      if (!firstRow) {
+        addRow({ qty: p.qty, description: p.description, unitPrice: p.unitPrice });
+      } else {
+        firstRow.querySelector(".qty").value = p.qty;
+        firstRow.querySelector(".desc").value = p.description;
+        firstRow.querySelector(".unit").value = p.unitPrice;
+        calcTotal();
+      }
+    }
+
+    // عرض الرسائل
+    function showMessage(text, type) {
+      const msgDiv = document.getElementById("message");
+      msgDiv.className = `message ${type}`;
+      msgDiv.innerHTML = text;
+      setTimeout(() => {
+        msgDiv.innerHTML = "";
+        msgDiv.className = "message";
+      }, 5000);
+    }
+
+    // إنشاء عرض السعر
     async function createQuote() {
       const clientName = document.getElementById("clientName").value.trim();
-      if(!clientName){ 
-        showMessage("Client Name required.", "error");
-        return; 
+      if (!clientName) {
+        showMessage("اسم العميل مطلوب", "error");
+        return;
       }
 
-      const currency = document.getElementById("currency").value;
       const items = getItems();
-      if(!items.length){ 
-        showMessage("Add at least one item.", "error");
-        return; 
+      if (!items.length) {
+        showMessage("أضف خدمة واحدة على الأقل", "error");
+        return;
       }
 
-      showMessage("Generating PDF...", "info");
+      showMessage("جاري إنشاء PDF...", "info");
 
-      try{
+      try {
         const data = {
           clientName,
-          currency,
+          currency: document.getElementById("currency").value,
           items,
+          signedStatus: document.getElementById("signedStatus").value,
           startDate: document.getElementById("startDate").value,
           endDate: document.getElementById("endDate").value,
-          website: document.getElementById("website").value,
           notes: document.getElementById("notes").value.trim(),
           terms: document.getElementById("terms").value.trim(),
           payment: getPayment()
@@ -196,41 +444,34 @@
         const res = await fetch(apiUrl(), {
           method: "POST",
           headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action:"create", data })
+          body: JSON.stringify({ action: "create", data })
         });
 
         const json = await res.json();
-        if(json.ok){
-          // عرض معاينة PDF
+        
+        if (json.ok) {
           document.getElementById("pdfPreview").style.display = "block";
           document.getElementById("pdfFrame").src = json.pdfUrl;
           
-          // رابط تحميل مباشر
-          const downloadLink = document.getElementById("pdfDownloadLink");
-          downloadLink.href = json.pdfUrl;
-          downloadLink.style.display = "inline-block";
-          downloadLink.innerHTML = '<i class="fas fa-download"></i> Download PDF';
-          downloadLink.className = "btn btn-primary";
-          downloadLink.target = "_blank";
+          const link = document.getElementById("pdfDownloadLink");
+          link.href = json.pdfUrl;
+          link.style.display = "inline-flex";
+          link.innerHTML = '<i class="fas fa-download"></i> تحميل PDF';
           
-          showMessage(`✅ Quote ${json.quoteNo} generated successfully!`, "success");
+          showMessage(`✅ تم إنشاء عرض السعر ${json.quoteNo}`, "success");
         } else {
-          showMessage("Error: " + (json.message || "Unknown"), "error");
+          showMessage("خطأ: " + (json.message || "حدث خطأ"), "error");
         }
-      }catch(err){
-        showMessage("Error: " + err.message, "error");
+      } catch (err) {
+        showMessage("خطأ: " + err.message, "error");
       }
     }
-    
-    // دالة لعرض الرسائل
-    function showMessage(msg, type) {
-      const out = document.getElementById("out");
-      const icon = type === "success" ? "✅" : type === "error" ? "❌" : "ℹ️";
-      out.innerHTML = `<span style="color: ${type === 'error' ? '#ef4444' : type === 'success' ? '#10b981' : '#667eea'}">${icon} ${msg}</span>`;
-    }
-    
-    // باقي الدوال كما هي من الكود القديم
-    // ... (نفس الدوال اللي كانت موجودة)
+
+    // استدعاء عند تحميل الصفحة
+    window.onload = function() {
+      renderPaymentFields();
+      updateStatusDisplay();
+    };
   </script>
 </body>
 </html>
