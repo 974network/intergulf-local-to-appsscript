@@ -153,68 +153,121 @@
     }
     
     function openEditModal() {
-      if (!currentData) return;
-      
-      let itemsJson = JSON.stringify(currentData.items, null, 2);
-      let html = `
-        <div class="input-group"><label>اسم العميل</label><input id="editClientName" value="${currentData.clientName}"></div>
-        <div class="input-group"><label>الرقم الضريبي</label><input id="editTaxNumber" value="${currentData.taxNumber || ''}"></div>
-        <div class="input-group"><label>السجل التجاري</label><input id="editCommercialReg" value="${currentData.commercialReg || ''}"></div>
-        <div class="input-group"><label>العنوان</label><input id="editAddress" value="${currentData.address || ''}"></div>
-        <div class="input-group"><label>الحالة</label>
-          <select id="editStatus">
-            <option value="pending" ${currentData.signedStatus === 'pending' ? 'selected' : ''}>⏳ قيد الانتظار</option>
-            <option value="signed" ${currentData.signedStatus === 'signed' ? 'selected' : ''}>✅ تم التوقيع</option>
-            <option value="approved" ${currentData.signedStatus === 'approved' ? 'selected' : ''}>📋 معتمد</option>
-          </select>
+  if (!currentData) return;
+  
+  // تحويل الخدمات لـ HTML عادي مش JSON
+  let itemsHtml = '';
+  if (currentData.items && currentData.items.length > 0) {
+    itemsHtml = '<div style="margin-bottom: 15px;"><h4>الخدمات:</h4>';
+    currentData.items.forEach((item, index) => {
+      itemsHtml += `
+        <div style="border:1px solid #ddd; padding:10px; margin-bottom:10px; border-radius:5px;">
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px;">
+            <div><label>الخدمة ${index+1}</label><input id="item_desc_${index}" value="${item.description}" style="width:100%"></div>
+            <div><label>الكمية</label><input id="item_qty_${index}" type="number" value="${item.qty}" style="width:100%"></div>
+            <div><label>السعر</label><input id="item_price_${index}" type="number" value="${item.unitPrice}" style="width:100%"></div>
+          </div>
         </div>
-        <div class="input-group"><label>الخدمات (JSON)</label><textarea id="editItems" rows="8">${itemsJson}</textarea></div>
-        <div class="input-group"><label>ملاحظات الدفع</label><textarea id="editNotes" rows="3">${currentData.notes || ''}</textarea></div>
       `;
-      
-      document.getElementById("editForm").innerHTML = html;
-      document.getElementById("editModal").style.display = "block";
-    }
+    });
+    itemsHtml += `<button class="btn btn-primary btn-small" onclick="addItemField()">+ إضافة خدمة</button></div>`;
+    itemsHtml += `<input type="hidden" id="itemCount" value="${currentData.items.length}">`;
+  }
+  
+  let html = `
+    <div class="input-group"><label>اسم العميل</label><input id="editClientName" value="${currentData.clientName}"></div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+      <div class="input-group"><label>الرقم الضريبي</label><input id="editTaxNumber" value="${currentData.taxNumber || ''}"></div>
+      <div class="input-group"><label>السجل التجاري</label><input id="editCommercialReg" value="${currentData.commercialReg || ''}"></div>
+    </div>
+    <div class="input-group"><label>العنوان</label><input id="editAddress" value="${currentData.address || ''}"></div>
+    <div class="input-group"><label>الحالة</label>
+      <select id="editStatus">
+        <option value="pending" ${currentData.signedStatus === 'pending' ? 'selected' : ''}>⏳ قيد الانتظار</option>
+        <option value="signed" ${currentData.signedStatus === 'signed' ? 'selected' : ''}>✅ تم التوقيع</option>
+        <option value="approved" ${currentData.signedStatus === 'approved' ? 'selected' : ''}>📋 معتمد</option>
+      </select>
+    </div>
+    ${itemsHtml}
+    <div class="input-group"><label>ملاحظات الدفع</label><textarea id="editNotes" rows="3">${currentData.notes || ''}</textarea></div>
+  `;
+  
+  document.getElementById("editForm").innerHTML = html;
+  document.getElementById("editModal").style.display = "block";
+}
+
+function addItemField() {
+  const count = Number(document.getElementById("itemCount")?.value || 0);
+  const newIndex = count;
+  
+  const div = document.createElement('div');
+  div.style = "border:1px solid #ddd; padding:10px; margin-bottom:10px; border-radius:5px;";
+  div.innerHTML = `
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px;">
+      <div><label>الخدمة ${newIndex+1}</label><input id="item_desc_${newIndex}" value="" style="width:100%"></div>
+      <div><label>الكمية</label><input id="item_qty_${newIndex}" type="number" value="1" style="width:100%"></div>
+      <div><label>السعر</label><input id="item_price_${newIndex}" type="number" value="0" style="width:100%"></div>
+    </div>
+  `;
+  
+  document.querySelector('#editForm .btn-primary').parentNode.insertBefore(div, document.querySelector('#editForm .btn-primary'));
+  document.getElementById("itemCount").value = newIndex + 1;
+}
     
     function closeEdit() {
       document.getElementById("editModal").style.display = "none";
     }
     
     async function saveEdit() {
-      try {
-        const newItems = JSON.parse(document.getElementById("editItems").value);
-        const newTotal = newItems.reduce((sum, item) => sum + (item.qty * item.unitPrice), 0);
-        
-        const newData = {
-          clientName: document.getElementById("editClientName").value,
-          taxNumber: document.getElementById("editTaxNumber").value,
-          commercialReg: document.getElementById("editCommercialReg").value,
-          address: document.getElementById("editAddress").value,
-          signedStatus: document.getElementById("editStatus").value,
-          notes: document.getElementById("editNotes").value,
-          currency: currentData.currency,
-          items: newItems,
-          total: newTotal
-        };
-        
-        const res = await fetch(apiUrl(), {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "update", quoteNo: currentQuoteNo, data: newData })
+  try {
+    // جمع الخدمات من الحقول
+    const itemCount = Number(document.getElementById("itemCount")?.value || 0);
+    const newItems = [];
+    
+    for (let i = 0; i < itemCount; i++) {
+      const desc = document.getElementById(`item_desc_${i}`)?.value;
+      if (desc && desc.trim()) {
+        newItems.push({
+          description: desc,
+          qty: Number(document.getElementById(`item_qty_${i}`)?.value || 1),
+          unitPrice: Number(document.getElementById(`item_price_${i}`)?.value || 0)
         });
-        
-        const json = await res.json();
-        if (json.ok) {
-          alert(`✅ تم التعديل بنجاح - الإصدار ${json.version}`);
-          closeEdit();
-          searchQuote();
-        } else {
-          alert("خطأ: " + json.message);
-        }
-      } catch (err) {
-        alert("خطأ في البيانات: " + err.message);
       }
     }
+    
+    const newTotal = newItems.reduce((sum, item) => sum + (item.qty * item.unitPrice), 0);
+    
+    const newData = {
+      clientName: document.getElementById("editClientName").value,
+      taxNumber: document.getElementById("editTaxNumber").value,
+      commercialReg: document.getElementById("editCommercialReg").value,
+      address: document.getElementById("editAddress").value,
+      signedStatus: document.getElementById("editStatus").value,
+      notes: document.getElementById("editNotes").value,
+      currency: currentData.currency,
+      items: newItems,
+      total: newTotal,
+      payment: currentData.payment
+    };
+    
+    const res = await fetch(apiUrl(), {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "update", quoteNo: currentQuoteNo, data: newData })
+    });
+    
+    const json = await res.json();
+    if (json.ok) {
+      alert(`✅ تم التعديل بنجاح`);
+      closeEdit();
+      searchQuote();
+    } else {
+      alert("خطأ: " + json.message);
+    }
+  } catch (err) {
+    alert("خطأ: " + err.message);
+  }
+}
     
     async function showHistory() {
       const res = await fetch(apiUrl() + "?action=history&quoteNo=" + encodeURIComponent(currentQuoteNo));
