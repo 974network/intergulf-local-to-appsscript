@@ -14,42 +14,35 @@
     .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
     .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
     button{padding:10px 14px;border:0;border-radius:10px;cursor:pointer;font-weight:800;}
-    button.danger{border:1px solid #c00;background:#fff;}
-    .muted{color:#666;font-size:12px;}
     table{width:100%;border-collapse:collapse;margin-top:10px;}
     th,td{border-bottom:1px solid #eee;padding:8px 6px;vertical-align:top;}
     th{font-size:12px;text-align:left;}
     .right{text-align:right;}
-    .pill{display:inline-block;padding:2px 8px;border:1px solid #ddd;border-radius:999px;font-size:12px;}
-    a{word-break:break-all;}
+    .muted{color:#666;font-size:12px;}
     .err{color:#c00;}
+    a{word-break:break-all;}
   </style>
 </head>
 <body>
   <div class="top">
     <div class="brand">Inter Gulf — Quotation</div>
-    <a href="./search.html">Search</a>
+    <a href="?action=page&p=search">Search</a>
   </div>
 
   <div class="card">
-    <div class="muted">
-      Uses Apps Script backend to generate PDF and save it to Drive.
-      <span class="pill">local</span>
-    </div>
-
     <div class="row3">
       <div>
         <label>Client Name *</label>
-        <input id="clientName" placeholder="Client name" />
+        <input id="clientName" placeholder="Client name">
       </div>
       <div>
         <label>Currency</label>
         <select id="currency" onchange="calcTotal()">
           <option value="QAR">QAR</option>
           <option value="USD">USD</option>
-          <option value="SYP">SYP</option>
           <option value="EUR">EUR</option>
           <option value="TRY">TRY</option>
+          <option value="SYP">SYP</option>
         </select>
       </div>
       <div>
@@ -62,57 +55,15 @@
     </div>
 
     <div class="row">
-      <div>
-        <label>Start Date</label>
-        <input id="startDate" type="date" />
-      </div>
-      <div>
-        <label>End Date</label>
-        <input id="endDate" type="date" />
-      </div>
+      <div><label>Start Date</label><input id="startDate" type="date"></div>
+      <div><label>End Date</label><input id="endDate" type="date"></div>
     </div>
 
-    <div class="row">
-      <div>
-        <label>Payment Method</label>
-        <select id="payType" onchange="renderPaymentFields()">
-          <option value="">—</option>
-          <option value="paypal">PayPal</option>
-          <option value="bank">Bank Transfer</option>
-          <option value="cash">Cash</option>
-        </select>
-      </div>
-      <div></div>
-    </div>
+    <label>Notes</label>
+    <textarea id="notes" rows="3"></textarea>
 
-    <div id="payFields"></div>
-
-    <label>Notes (optional)</label>
-    <textarea id="notes" rows="3" placeholder="Any notes..."></textarea>
-
-    <label>Terms (optional)</label>
-    <textarea id="terms" rows="4" placeholder="If empty, default terms will appear in the PDF."></textarea>
-  </div>
-
-  <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
-      <div>
-        <b>Saved Services</b> <span class="pill">local</span>
-        <div class="muted">Save first item as preset → reuse it anytime.</div>
-      </div>
-      <div style="display:flex;gap:8px;">
-        <button onclick="savePreset()">Save first item</button>
-        <button class="danger" onclick="clearPresets()">Clear presets</button>
-      </div>
-    </div>
-
-    <div class="row">
-      <div>
-        <label>Pick Preset</label>
-        <select id="presetPick" onchange="applyPreset()"></select>
-      </div>
-      <div></div>
-    </div>
+    <label>Terms</label>
+    <textarea id="terms" rows="4"></textarea>
   </div>
 
   <div class="card">
@@ -121,17 +72,17 @@
       <button onclick="addRow()">+ Add item</button>
     </div>
 
-    <table id="itemsTable">
+    <table>
       <thead>
         <tr>
           <th style="width:10%;">Qty</th>
           <th>Description</th>
-          <th class="right" style="width:20%;">Unit Price</th>
+          <th class="right" style="width:20%;">Unit</th>
           <th class="right" style="width:20%;">Amount</th>
           <th style="width:10%;"></th>
         </tr>
       </thead>
-      <tbody></tbody>
+      <tbody id="tbody"></tbody>
     </table>
 
     <div class="right" style="margin-top:10px;">
@@ -144,246 +95,111 @@
     </div>
   </div>
 
-  <!-- config.js must be in same folder -->
-  <script src="./config.js"></script>
+<script>
+  var tbody = document.getElementById("tbody");
 
-  <script>
-    function apiUrl(){
-      var u = String(window.APP_SCRIPT_URL || "").trim();
-      if(!u || u.indexOf("/exec") === -1) throw new Error("APP_SCRIPT_URL missing/invalid in config.js");
-      return u;
+  function escapeAttr(s){
+    return String(s || "").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+
+  function addRow(pref){
+    pref = pref || {};
+    var qty = (pref.qty != null) ? pref.qty : 1;
+    var desc = (pref.description != null) ? pref.description : "";
+    var unit = (pref.unitPrice != null) ? pref.unitPrice : 0;
+
+    var tr = document.createElement("tr");
+    tr.innerHTML =
+      '<td><input class="qty" type="number" min="1" value="'+qty+'"></td>' +
+      '<td><input class="desc" value="'+escapeAttr(desc)+'"></td>' +
+      '<td class="right"><input class="unit" type="number" min="0" value="'+unit+'"></td>' +
+      '<td class="right"><span class="amt">0</span></td>' +
+      '<td class="right"><button onclick="removeRow(this)">X</button></td>';
+
+    tbody.appendChild(tr);
+
+    var inputs = tr.querySelectorAll("input");
+    for(var i=0;i<inputs.length;i++){
+      inputs[i].addEventListener("input", calcTotal);
     }
+    calcTotal();
+  }
 
-    function renderPaymentFields(){
-      var t = document.getElementById("payType").value;
-      var el = document.getElementById("payFields");
+  function removeRow(btn){
+    var tr = btn.parentNode.parentNode;
+    tr.parentNode.removeChild(tr);
+    calcTotal();
+  }
 
-      if(t === "paypal"){
-        el.innerHTML =
-          '<div class="row">' +
-            '<div>' +
-              '<label>PayPal Email</label>' +
-              '<input id="paypalEmail" placeholder="name@example.com">' +
-            '</div>' +
-            '<div></div>' +
-          '</div>';
-      } else if(t === "bank"){
-        el.innerHTML =
-          '<div class="row">' +
-            '<div><label>Bank Name</label><input id="bankName" placeholder="Bank name"></div>' +
-            '<div><label>Holder</label><input id="holder" placeholder="Account holder"></div>' +
-          '</div>' +
-          '<div class="row">' +
-            '<div><label>IBAN</label><input id="iban" placeholder="IBAN"></div>' +
-            '<div><label>Account No.</label><input id="accountNo" placeholder="Account number"></div>' +
-          '</div>' +
-          '<div class="row">' +
-            '<div><label>SWIFT</label><input id="swift" placeholder="SWIFT"></div>' +
-            '<div></div>' +
-          '</div>';
-      } else if(t === "cash"){
-        el.innerHTML = '<div class="muted" style="margin-top:8px;">Cash payment selected.</div>';
-      } else {
-        el.innerHTML = "";
-      }
+  function getItems(){
+    var rows = tbody.querySelectorAll("tr");
+    var out = [];
+    for(var i=0;i<rows.length;i++){
+      var r = rows[i];
+      var qty = Number(r.querySelector(".qty").value || 0);
+      var desc = String(r.querySelector(".desc").value || "").trim();
+      var unit = Number(r.querySelector(".unit").value || 0);
+      if(desc) out.push({ qty: qty, description: desc, unitPrice: unit });
     }
-    renderPaymentFields();
+    return out;
+  }
 
-    function val(id){
-      var el = document.getElementById(id);
-      return el ? String(el.value || "").trim() : "";
+  function calcTotal(){
+    var currency = document.getElementById("currency").value;
+    var total = 0;
+    var rows = tbody.querySelectorAll("tr");
+    for(var i=0;i<rows.length;i++){
+      var r = rows[i];
+      var qty = Number(r.querySelector(".qty").value || 0);
+      var unit = Number(r.querySelector(".unit").value || 0);
+      var amt = qty*unit;
+      r.querySelector(".amt").textContent = currency + " " + amt.toLocaleString();
+      total += amt;
     }
+    document.getElementById("totalOut").textContent = currency + " " + total.toLocaleString();
+  }
 
-    function getPayment(){
-      var type = document.getElementById("payType").value;
-      if(!type) return { type:"" };
+  addRow({ qty:1, description:"Social Media Management", unitPrice:15000 });
 
-      if(type === "paypal"){
-        return { type:"paypal", paypalEmail: val("paypalEmail") };
-      }
-      if(type === "bank"){
-        return {
-          type:"bank",
-          bankName: val("bankName"),
-          holder: val("holder"),
-          iban: val("iban"),
-          accountNo: val("accountNo"),
-          swift: val("swift")
-        };
-      }
-      return { type:"cash" };
-    }
+  function createQuote(){
+    var out = document.getElementById("out");
+    out.innerHTML = "";
 
-    var tbody = document.querySelector("#itemsTable tbody");
+    var clientName = String(document.getElementById("clientName").value || "").trim();
+    if(!clientName){ out.innerHTML = "<b class='err'>Client Name required.</b>"; return; }
 
-    function escapeAttr(s){
-      return String(s || "").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-    }
+    var data = {
+      clientName: clientName,
+      currency: document.getElementById("currency").value,
+      items: getItems(),
+      startDate: document.getElementById("startDate").value,
+      endDate: document.getElementById("endDate").value,
+      website: document.getElementById("website").value,
+      notes: String(document.getElementById("notes").value || "").trim(),
+      terms: String(document.getElementById("terms").value || "").trim(),
+      payment: { type:"" }
+    };
 
-    function addRow(pref){
-      pref = pref || {};
-      var qty = (pref.qty !== undefined && pref.qty !== null) ? pref.qty : 1;
-      var desc = (pref.description !== undefined && pref.description !== null) ? pref.description : "";
-      var unitPrice = (pref.unitPrice !== undefined && pref.unitPrice !== null) ? pref.unitPrice : 0;
+    out.textContent = "Working...";
 
-      var tr = document.createElement("tr");
-      tr.innerHTML =
-        '<td><input class="qty" type="number" min="1" value="'+ qty +'"></td>' +
-        '<td><input class="desc" placeholder="Service description" value="'+ escapeAttr(desc) +'"></td>' +
-        '<td class="right"><input class="unit" type="number" min="0" value="'+ unitPrice +'"></td>' +
-        '<td class="right"><span class="amt">0</span></td>' +
-        '<td class="right"><button class="danger" onclick="removeRow(this)">X</button></td>';
-
-      tbody.appendChild(tr);
-
-      var inputs = tr.querySelectorAll("input");
-      for(var i=0;i<inputs.length;i++){
-        inputs[i].addEventListener("input", calcTotal);
-      }
-      calcTotal();
-    }
-
-    function removeRow(btn){
-      var tr = btn.closest ? btn.closest("tr") : null;
-      if(tr && tr.parentNode) tr.parentNode.removeChild(tr);
-      calcTotal();
-    }
-
-    function getItems(){
-      var rows = tbody.querySelectorAll("tr");
-      var out = [];
-      for(var i=0;i<rows.length;i++){
-        var r = rows[i];
-        var qty = Number(r.querySelector(".qty").value || 0);
-        var description = String(r.querySelector(".desc").value || "").trim();
-        var unitPrice = Number(r.querySelector(".unit").value || 0);
-        if(description) out.push({ qty: qty, description: description, unitPrice: unitPrice });
-      }
-      return out;
-    }
-
-    function calcTotal(){
-      var currency = document.getElementById("currency").value;
-      var total = 0;
-      var rows = tbody.querySelectorAll("tr");
-      for(var i=0;i<rows.length;i++){
-        var r = rows[i];
-        var qty = Number(r.querySelector(".qty").value || 0);
-        var unit = Number(r.querySelector(".unit").value || 0);
-        var amt = qty*unit;
-        r.querySelector(".amt").textContent = currency + " " + amt.toLocaleString();
-        total += amt;
-      }
-      document.getElementById("totalOut").textContent = currency + " " + total.toLocaleString();
-    }
-
-    // default row
-    addRow({ qty:1, description:"Social Media Management", unitPrice:15000 });
-
-    // presets
-    var PRESET_KEY = "ig_service_presets_v1";
-
-    function loadPresets(){
-      try { return JSON.parse(localStorage.getItem(PRESET_KEY) || "[]"); }
-      catch(e){ return []; }
-    }
-
-    function savePresets(p){
-      localStorage.setItem(PRESET_KEY, JSON.stringify(p));
-    }
-
-    function refreshPresetPick(){
-      var presets = loadPresets();
-      var sel = document.getElementById("presetPick");
-      var html = '<option value="">—</option>';
-      for(var i=0;i<presets.length;i++){
-        html += '<option value="'+ i +'">'+ escapeAttr(presets[i].name) +'</option>';
-      }
-      sel.innerHTML = html;
-    }
-    refreshPresetPick();
-
-    function savePreset(){
-      var items = getItems();
-      if(!items.length){ alert("Add at least one item first."); return; }
-      var first = items[0];
-      var name = prompt("Preset name:", first.description);
-      if(!name) return;
-
-      var presets = loadPresets();
-      presets.push({ name: name, qty:first.qty, description:first.description, unitPrice:first.unitPrice });
-      savePresets(presets);
-      refreshPresetPick();
-      alert("Saved.");
-    }
-
-    function clearPresets(){
-      if(!confirm("Clear all presets?")) return;
-      savePresets([]);
-      refreshPresetPick();
-    }
-
-    function applyPreset(){
-      var idx = document.getElementById("presetPick").value;
-      if(idx === "") return;
-
-      var presets = loadPresets();
-      var p = presets[Number(idx)];
-      if(!p) return;
-
-      var firstRow = tbody.querySelector("tr");
-      if(!firstRow){
-        addRow({ qty:p.qty, description:p.description, unitPrice:p.unitPrice });
-      } else {
-        firstRow.querySelector(".qty").value = p.qty;
-        firstRow.querySelector(".desc").value = p.description;
-        firstRow.querySelector(".unit").value = p.unitPrice;
-        calcTotal();
-      }
-    }
-
-    async function createQuote(){
-      var out = document.getElementById("out");
-      out.innerHTML = "";
-
-      var clientName = document.getElementById("clientName").value.trim();
-      if(!clientName){ out.innerHTML = "<b class='err'>Client Name required.</b>"; return; }
-
-      var currency = document.getElementById("currency").value;
-      var items = getItems();
-      if(!items.length){ out.innerHTML = "<b class='err'>Add at least one item.</b>"; return; }
-
-      out.textContent = "Working...";
-
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", location.href, true);
+    xhr.setRequestHeader("Content-Type", "text/plain;charset=utf-8");
+    xhr.onreadystatechange = function(){
+      if(xhr.readyState !== 4) return;
       try{
-        var data = {
-          clientName: clientName,
-          currency: currency,
-          items: items,
-          startDate: document.getElementById("startDate").value,
-          endDate: document.getElementById("endDate").value,
-          website: document.getElementById("website").value,
-          notes: document.getElementById("notes").value.trim(),
-          terms: document.getElementById("terms").value.trim(),
-          payment: getPayment()
-        };
-
-        var res = await fetch(apiUrl(), {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action:"create", data: data })
-        });
-
-        var json = await res.json();
+        var json = JSON.parse(xhr.responseText);
         if(json.ok){
           out.innerHTML = "Done — <b>" + json.quoteNo + "</b> — <a target='_blank' href='" + json.pdfUrl + "'>Open PDF</a>";
         } else {
           out.innerHTML = "<b class='err'>Error:</b> " + (json.message || "Unknown");
         }
-      }catch(err){
-        out.innerHTML = "<b class='err'>Error:</b> " + err.message;
+      } catch(e){
+        out.innerHTML = "<b class='err'>Server returned:</b><br><pre style='white-space:pre-wrap'>" + xhr.responseText + "</pre>";
       }
-    }
-  </script>
+    };
+    xhr.send(JSON.stringify({ action:"create", data:data }));
+  }
+</script>
 </body>
 </html>
