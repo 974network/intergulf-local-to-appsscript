@@ -272,3 +272,245 @@ body {
   .content { padding: 15px; }
   .total-amount { font-size: 24px; }
 }
+/* تحسينات إضافية للجوالات */
+@media (max-width: 768px) {
+  .app-header { 
+    flex-direction: column; 
+    gap: 15px; 
+    text-align: center; 
+    padding: 15px;
+  }
+  
+  .logo-brand {
+    font-size: 20px;
+  }
+  
+  .logo-brand span {
+    display: block;
+    margin: 10px auto 0;
+    width: fit-content;
+  }
+  
+  .nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+  }
+  
+  .nav-links a {
+    padding: 6px 15px;
+    font-size: 13px;
+  }
+  
+  .content { 
+    padding: 15px; 
+  }
+  
+  .glass-card {
+    padding: 15px;
+  }
+  
+  .card-title {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  
+  .card-title h3 {
+    font-size: 16px;
+  }
+  
+  .status-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .status-badge {
+    width: fit-content;
+  }
+  
+  .table-container {
+    margin: 10px 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .items-table {
+    min-width: 600px; /* للتمرير الأفقي */
+  }
+  
+  .items-table th,
+  .items-table td {
+    padding: 8px;
+    font-size: 12px;
+  }
+  
+  .items-table input {
+    padding: 6px;
+    font-size: 12px;
+  }
+  
+  .btn {
+    padding: 8px 15px;
+    font-size: 13px;
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 5px;
+  }
+  
+  .btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .total-section {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+    padding: 15px;
+  }
+  
+  .total-label {
+    font-size: 16px;
+  }
+  
+  .total-amount { 
+    font-size: 24px; 
+  }
+  
+  .download-btn {
+    margin-top: 10px;
+  }
+  
+  .modal-content {
+    width: 95%;
+    margin: 20px auto;
+    padding: 20px;
+    max-height: 90vh;
+  }
+  
+  .version-item {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+  
+  .version-item .btn {
+    width: 100%;
+  }
+  
+  .login-box {
+    width: 90%;
+    padding: 30px 20px;
+    margin: 20px;
+  }
+  
+  .login-box h2 {
+    font-size: 24px;
+  }
+  
+  .login-box input {
+    padding: 10px;
+    font-size: 14px;
+  }
+  
+  .pdf-preview iframe {
+    height: 300px;
+  }
+  
+  .input-group input,
+  .input-group select,
+  .input-group textarea {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+}
+
+/* تحسينات للشاشات الصغيرة جداً */
+@media (max-width: 480px) {
+  .container {
+    padding: 10px;
+  }
+  
+  .main-card {
+    border-radius: 15px;
+  }
+  
+  .app-header {
+    padding: 12px;
+  }
+  
+  .logo-brand {
+    font-size: 18px;
+  }
+  
+  .logo-brand span {
+    font-size: 12px;
+    padding: 4px 10px;
+  }
+  
+  .nav-links a {
+    padding: 5px 12px;
+    font-size: 12px;
+  }
+  
+  .content {
+    padding: 12px;
+  }
+  
+  .glass-card {
+    padding: 12px;
+    border-radius: 15px;
+  }
+  
+  .card-title h3 {
+    font-size: 15px;
+  }
+  
+  .card-title h3 i {
+    font-size: 14px;
+  }
+  
+  .total-amount {
+    font-size: 20px;
+  }
+  
+  .btn {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+  
+  .message {
+    padding: 12px;
+    font-size: 13px;
+  }
+  
+  .footer {
+    padding: 15px;
+    font-size: 11px;
+  }
+}
+
+/* تحسينات شاشات التابلت */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .container {
+    max-width: 95%;
+  }
+  
+  .glass-card {
+    padding: 20px;
+  }
+  
+  .items-table th,
+  .items-table td {
+    padding: 10px;
+    font-size: 13px;
+  }
+  
+  .total-amount {
+    font-size: 28px;
+  }
+}
