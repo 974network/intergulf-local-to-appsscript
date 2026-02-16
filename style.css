@@ -1,5 +1,4 @@
-/* style.css - تصمييم عصري وجميل للموقع */
-
+/* التصميم العام */
 * {
   margin: 0;
   padding: 0;
@@ -7,8 +6,8 @@
 }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
   min-height: 100vh;
   padding: 20px;
 }
@@ -21,46 +20,35 @@ body {
 /* الكارد الرئيسي */
 .main-card {
   background: white;
-  border-radius: 20px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  border-radius: 25px;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.3);
   overflow: hidden;
-  animation: slideIn 0.5s ease-out;
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateY(-20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
 }
 
 /* الهيدر */
 .app-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
   padding: 20px 30px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  border-bottom: 3px solid #ffd700;
 }
 
 .logo-brand {
   color: white;
-  font-size: 24px;
+  font-size: 26px;
   font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
 }
 
 .logo-brand span {
-  background: rgba(255,255,255,0.2);
-  padding: 5px 10px;
-  border-radius: 10px;
+  background: rgba(255,215,0,0.2);
+  padding: 5px 12px;
+  border-radius: 50px;
   font-size: 14px;
   margin-left: 10px;
+  border: 1px solid #ffd700;
 }
 
 .nav-links a {
@@ -68,19 +56,19 @@ body {
   text-decoration: none;
   padding: 8px 20px;
   border-radius: 50px;
-  background: rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.1);
   transition: all 0.3s;
   font-weight: 600;
-  font-size: 14px;
-  letter-spacing: 0.5px;
+  border: 1px solid rgba(255,215,0,0.3);
 }
 
 .nav-links a:hover {
-  background: rgba(255,255,255,0.3);
+  background: #ffd700;
+  color: #1e3c72;
   transform: translateY(-2px);
 }
 
-/* محتوى الصفحة */
+/* المحتوى */
 .content {
   padding: 30px;
 }
@@ -88,17 +76,11 @@ body {
 /* الكروت */
 .glass-card {
   background: white;
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-  border: 1px solid rgba(255,255,255,0.2);
-  transition: all 0.3s;
-}
-
-.glass-card:hover {
-  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
-  transform: translateY(-2px);
+  border-radius: 20px;
+  padding: 25px;
+  margin-bottom: 25px;
+  box-shadow: 0 5px 25px rgba(0,0,0,0.05);
+  border: 1px solid #eef2f7;
 }
 
 .card-title {
@@ -107,17 +89,17 @@ body {
   align-items: center;
   margin-bottom: 20px;
   padding-bottom: 10px;
-  border-bottom: 2px solid #f0f0f0;
+  border-bottom: 2px solid #eef2f7;
 }
 
 .card-title h3 {
-  color: #333;
+  color: #1e3c72;
   font-size: 18px;
   font-weight: 600;
 }
 
 .card-title h3 i {
-  color: #667eea;
+  color: #ffd700;
   margin-right: 8px;
 }
 
@@ -129,11 +111,9 @@ body {
 .input-group label {
   display: block;
   margin-bottom: 5px;
-  color: #555;
+  color: #1e3c72;
   font-weight: 600;
   font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
 .input-group input,
@@ -141,26 +121,59 @@ body {
 .input-group textarea {
   width: 100%;
   padding: 12px 15px;
-  border: 2px solid #e0e0e0;
+  border: 2px solid #eef2f7;
   border-radius: 12px;
   font-size: 14px;
   transition: all 0.3s;
-  background: #f8f9fa;
+  background: #f8fafd;
 }
 
 .input-group input:focus,
 .input-group select:focus,
 .input-group textarea:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #ffd700;
   background: white;
-  box-shadow: 0 0 0 4px rgba(102,126,234,0.1);
+  box-shadow: 0 0 0 4px rgba(255,215,0,0.1);
+}
+
+/* حالة التوقيع */
+.status-container {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: 50px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.status-pending {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeeba;
+}
+
+.status-signed {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.status-approved {
+  background: #cce5ff;
+  color: #004085;
+  border: 1px solid #b8daff;
 }
 
 /* الجدول */
 .table-container {
   overflow-x: auto;
-  margin: 15px 0;
+  margin: 20px 0;
 }
 
 .items-table {
@@ -169,32 +182,30 @@ body {
 }
 
 .items-table th {
-  background: #f8f9fa;
+  background: #f8fafd;
   padding: 12px;
   font-size: 12px;
-  text-transform: uppercase;
-  color: #666;
+  color: #1e3c72;
   font-weight: 600;
-  letter-spacing: 0.5px;
-  border-bottom: 2px solid #e0e0e0;
+  border-bottom: 2px solid #eef2f7;
 }
 
 .items-table td {
   padding: 10px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid #eef2f7;
 }
 
 .items-table input {
   width: 100%;
   padding: 8px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid #eef2f7;
   border-radius: 8px;
   transition: all 0.3s;
 }
 
 .items-table input:focus {
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+  border-color: #ffd700;
+  box-shadow: 0 0 0 3px rgba(255,215,0,0.1);
   outline: none;
 }
 
@@ -213,50 +224,39 @@ body {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
   color: white;
-  box-shadow: 0 4px 15px rgba(102,126,234,0.4);
+  box-shadow: 0 4px 15px rgba(30,60,114,0.3);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102,126,234,0.6);
+  box-shadow: 0 6px 20px rgba(30,60,114,0.4);
 }
 
 .btn-success {
-  background: #10b981;
+  background: linear-gradient(135deg, #28a745 0%, #218838 100%);
   color: white;
-  box-shadow: 0 4px 15px rgba(16,185,129,0.3);
 }
 
 .btn-success:hover {
-  background: #059669;
   transform: translateY(-2px);
-}
-
-.btn-danger {
-  background: #ef4444;
-  color: white;
-}
-
-.btn-danger:hover {
-  background: #dc2626;
 }
 
 .btn-outline {
   background: transparent;
-  border: 2px solid #667eea;
-  color: #667eea;
+  border: 2px solid #1e3c72;
+  color: #1e3c72;
 }
 
 .btn-outline:hover {
-  background: #667eea;
+  background: #1e3c72;
   color: white;
 }
 
 /* المجموع */
 .total-section {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  background: linear-gradient(135deg, #f8fafd 0%, #eef2f7 100%);
   border-radius: 16px;
   padding: 20px;
   margin: 20px 0;
@@ -267,40 +267,33 @@ body {
 
 .total-label {
   font-size: 18px;
-  color: #555;
+  color: #1e3c72;
   font-weight: 600;
 }
 
 .total-amount {
   font-size: 32px;
   font-weight: bold;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #1e3c72;
 }
 
-/* زر تحميل PDF */
+/* زر التحميل */
 .download-btn {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
-  padding: 15px 30px;
-  font-size: 16px;
   width: 100%;
+  padding: 15px;
+  font-size: 16px;
   justify-content: center;
-  margin-top: 20px;
-}
-
-.download-btn i {
-  font-size: 20px;
+  margin-top: 10px;
 }
 
 /* معاينة PDF */
 .pdf-preview {
-  background: #f8f9fa;
+  background: #f8fafd;
   border-radius: 16px;
   padding: 20px;
   margin-top: 20px;
-  border: 2px dashed #667eea;
+  border: 2px dashed #1e3c72;
+  display: none;
 }
 
 .pdf-preview iframe {
@@ -311,28 +304,37 @@ body {
   background: white;
 }
 
+/* الرسائل */
+.message {
+  padding: 15px;
+  border-radius: 12px;
+  margin-top: 15px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.message.success {
+  background: #d4edda;
+  color: #155724;
+}
+
+.message.error {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.message.info {
+  background: #cce5ff;
+  color: #004085;
+}
+
 /* تذييل */
 .footer {
   text-align: center;
   padding: 20px;
   color: #888;
   font-size: 12px;
-}
-
-/* شارات */
-.badge {
-  display: inline-block;
-  padding: 3px 8px;
-  border-radius: 50px;
-  font-size: 11px;
-  font-weight: 600;
-  background: #e0e0e0;
-  color: #555;
-}
-
-.badge-primary {
-  background: #667eea;
-  color: white;
+  border-top: 1px solid #eef2f7;
 }
 
 /* للشاشات الصغيرة */
