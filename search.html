@@ -3,102 +3,97 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>إنتر جلف | بحث</title>
+  <title>إنتر جلف | بحث وتعديل</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <style>
-    body {
-      font-family: 'Segoe UI', Arial, sans-serif;
-    }
-    
-    .search-box {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-    
-    .search-box input {
-      flex: 1;
-      padding: 15px;
-      border: 2px solid #eef2f7;
-      border-radius: 12px;
-      font-size: 16px;
-    }
-    
-    .search-box button {
-      padding: 15px 30px;
-    }
-    
-    .result-card {
-      background: #f8fafd;
-      border-radius: 16px;
-      padding: 20px;
-      margin-top: 20px;
-    }
-    
-    .result-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 10px 0;
-      border-bottom: 1px solid #eef2f7;
-    }
-    
-    .result-label {
-      font-weight: 600;
-      color: #1e3c72;
-    }
-    
-    .result-value {
-      color: #333;
-    }
-  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
 <body>
-  <div class="container">
+  <!-- نافذة تسجيل الدخول -->
+  <div id="loginOverlay" class="login-overlay">
+    <div class="login-box">
+      <h2>🔒 دخول آمن</h2>
+      <p>الرجاء إدخال كلمة المرور</p>
+      <input type="password" id="passwordInput" placeholder="كلمة المرور" autofocus>
+      <button onclick="checkPassword()">دخول</button>
+    </div>
+  </div>
+
+  <div class="container" id="mainContent" style="display: none;">
     <div class="main-card">
       <div class="app-header">
-        <div class="logo-brand">
-          إنتر جلف <span>بحث</span>
-        </div>
-        <div class="nav-links">
-          <a href="./index.html"><i class="fas fa-plus"></i> إنشاء جديد</a>
-        </div>
+        <div class="logo-brand">إنتر جلف <span>بحث وتعديل</span></div>
+        <div class="nav-links"><a href="./index.html"><i class="fas fa-plus"></i> إنشاء</a></div>
       </div>
 
       <div class="content">
         <div class="glass-card">
-          <div class="card-title">
-            <h3><i class="fas fa-search"></i> بحث عن عرض سعر</h3>
+          <div class="card-title"><h3><i class="fas fa-search"></i> بحث عن عرض سعر</h3></div>
+          <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <input id="quoteNo" placeholder="أدخل رقم عرض السعر" style="flex: 1; padding: 12px;">
+            <button class="btn btn-primary" onclick="searchQuote()"><i class="fas fa-search"></i> بحث</button>
           </div>
-          
-          <div class="search-box">
-            <input id="quoteNo" placeholder="أدخل رقم عرض السعر (مثال: IG-QUO-2026-0001)">
-            <button class="btn btn-primary" onclick="searchQuote()">
-              <i class="fas fa-search"></i> بحث
-            </button>
-          </div>
-          
           <div id="result"></div>
-          <div id="actions" style="display: none; margin-top: 20px;">
-            <button class="btn btn-danger" onclick="deleteQuote()">
-              <i class="fas fa-trash"></i> حذف PDF
-            </button>
-          </div>
         </div>
       </div>
     </div>
   </div>
 
-    <script src="./config.js"></script>
+  <!-- مودال التعديل -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <h3><i class="fas fa-edit"></i> تعديل عرض السعر</h3>
+      <div id="editForm"></div>
+      <div style="display: flex; gap: 10px; margin-top: 20px;">
+        <button class="btn btn-success" onclick="saveEdit()">حفظ التعديلات</button>
+        <button class="btn btn-danger" onclick="closeEdit()">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- مودال سجل الإصدارات -->
+  <div id="historyModal" class="modal">
+    <div class="modal-content">
+      <h3><i class="fas fa-history"></i> سجل تعديلات عرض السعر</h3>
+      <div id="historyList"></div>
+      <button class="btn btn-primary" onclick="closeHistory()" style="margin-top: 15px;">إغلاق</button>
+    </div>
+  </div>
+
+  <script src="./config.js"></script>
   <script>
-    // تعريف دالة apiUrl
-    function apiUrl(){
-      const u = (window.APP_SCRIPT_URL || "").trim();
-      if(!u || u.includes("PASTE_YOUR")) throw new Error("ضع رابط التطبيق في config.js");
+    // ========== نظام تسجيل الدخول ==========
+    const VALID_HASH = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918";
+    
+    function checkPassword() {
+      const input = document.getElementById("passwordInput").value;
+      const hash = CryptoJS.SHA256(input).toString();
+      
+      if (hash === VALID_HASH) {
+        document.getElementById("loginOverlay").style.display = "none";
+        document.getElementById("mainContent").style.display = "block";
+        sessionStorage.setItem("authenticated", "true");
+      } else {
+        alert("❌ كلمة المرور غير صحيحة");
+      }
+    }
+    
+    window.onload = function() {
+      if (sessionStorage.getItem("authenticated") === "true") {
+        document.getElementById("loginOverlay").style.display = "none";
+        document.getElementById("mainContent").style.display = "block";
+      }
+    };
+    
+    // ========== دوال البحث والتعديل ==========
+    function apiUrl() {
+      const u = window.APP_SCRIPT_URL;
+      if (!u || u.includes("YOUR_APPS_SCRIPT_URL")) throw new Error("ضع رابط التطبيق في config.js");
       return u;
     }
-
+    
     let currentQuoteNo = "";
+    let currentData = null;
     
     async function searchQuote() {
       const quoteNo = document.getElementById("quoteNo").value.trim();
@@ -106,95 +101,198 @@
       
       if (!quoteNo) {
         document.getElementById("result").innerHTML = '<div class="message error">الرجاء إدخال رقم عرض السعر</div>';
-        document.getElementById("actions").style.display = "none";
         return;
       }
-
+      
       document.getElementById("result").innerHTML = '<div class="message info">جاري البحث...</div>';
-      document.getElementById("actions").style.display = "none";
-
+      
       try {
-        const url = apiUrl() + "?action=search&quoteNo=" + encodeURIComponent(quoteNo);
-        const res = await fetch(url);
+        const res = await fetch(apiUrl() + "?action=search&quoteNo=" + encodeURIComponent(quoteNo));
         const json = await res.json();
-
+        
         if (json.ok) {
+          currentData = json;
           let itemsHtml = '';
           if (json.items && json.items.length > 0) {
-            itemsHtml = '<table class="items-table"><tr><th>الخدمة</th><th>الكمية</th><th>سعر الوحدة</th></tr>';
+            itemsHtml = '<table class="items-table"><tr><th>الخدمة</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr>';
             json.items.forEach(item => {
-              itemsHtml += `<tr>
-                <td>${item.description || ''}</td>
-                <td>${item.qty || 1}</td>
-                <td>${json.currency || ''} ${item.unitPrice || 0}</td>
-              </tr>`;
+              const total = item.qty * item.unitPrice;
+              itemsHtml += `<tr><td>${item.description}</td><td>${item.qty}</td><td>${json.currency} ${item.unitPrice}</td><td>${json.currency} ${total}</td></tr>`;
             });
             itemsHtml += '</table>';
           }
-
+          
           const pdfLink = (json.pdfUrl && json.pdfUrl !== "DELETED")
-            ? `<a href="${json.pdfUrl}" target="_blank" class="btn btn-success" style="margin-top: 15px;">
-                 <i class="fas fa-file-pdf"></i> عرض PDF
-               </a>`
+            ? `<a href="${json.pdfUrl}" target="_blank" class="btn btn-success" style="margin:10px 0;"><i class="fas fa-file-pdf"></i> عرض PDF الحالي</a>`
             : '<p class="message error">الملف محذوف</p>';
-
+          
           document.getElementById("result").innerHTML = `
-            <div class="result-card">
-              <div class="result-item">
-                <span class="result-label">رقم عرض السعر:</span>
-                <span class="result-value">${json.quoteNo}</span>
-              </div>
-              <div class="result-item">
-                <span class="result-label">العميل:</span>
-                <span class="result-value">${json.clientName}</span>
-              </div>
-              <div class="result-item">
-                <span class="result-label">التاريخ:</span>
-                <span class="result-value">${new Date(json.createdAt).toLocaleDateString('ar')}</span>
-              </div>
-              <div class="result-item">
-                <span class="result-label">المجموع:</span>
-                <span class="result-value">${json.currency || ''} ${json.total || 0}</span>
+            <div class="glass-card">
+              <div style="display: grid; grid-template-columns: repeat(3,1fr); gap: 15px; margin-bottom: 20px;">
+                <div><span class="label">رقم عرض السعر</span><br><strong>${json.quoteNo}</strong></div>
+                <div><span class="label">العميل</span><br><strong>${json.clientName}</strong></div>
+                <div><span class="label">المجموع</span><br><strong>${json.currency} ${json.total}</strong></div>
+                <div><span class="label">الحالة</span><br><strong>${json.signedStatus === 'signed' ? '✅ تم التوقيع' : (json.signedStatus === 'approved' ? '📋 معتمد' : '⏳ قيد الانتظار')}</strong></div>
+                <div><span class="label">التاريخ</span><br><strong>${new Date(json.createdAt).toLocaleDateString()}</strong></div>
               </div>
               ${itemsHtml}
-              <div style="text-align: center; margin-top: 20px;">
-                ${pdfLink}
+              <div style="margin: 15px 0;">${pdfLink}</div>
+              <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-primary" onclick="openEditModal()"><i class="fas fa-edit"></i> تعديل</button>
+                <button class="btn btn-info" onclick="showHistory()"><i class="fas fa-history"></i> سجل التعديلات</button>
+                <button class="btn btn-danger" onclick="deleteQuote()"><i class="fas fa-trash"></i> حذف</button>
               </div>
             </div>
           `;
-          
-          if (json.pdfUrl && json.pdfUrl !== "DELETED") {
-            document.getElementById("actions").style.display = "block";
-          }
         } else {
-          document.getElementById("result").innerHTML = '<div class="message error">لم يتم العثور على عرض السعر</div>';
+          document.getElementById("result").innerHTML = '<div class="message error">عرض السعر غير موجود</div>';
         }
       } catch (err) {
         document.getElementById("result").innerHTML = '<div class="message error">خطأ: ' + err.message + '</div>';
       }
     }
-
-    async function deleteQuote() {
-      if (!currentQuoteNo || !confirm(`هل أنت متأكد من حذف ملف PDF لعرض السعر ${currentQuoteNo}؟`)) {
-        return;
-      }
-
+    
+    function openEditModal() {
+      if (!currentData) return;
+      
+      let itemsJson = JSON.stringify(currentData.items, null, 2);
+      let html = `
+        <div class="input-group"><label>اسم العميل</label><input id="editClientName" value="${currentData.clientName}"></div>
+        <div class="input-group"><label>الرقم الضريبي</label><input id="editTaxNumber" value="${currentData.taxNumber || ''}"></div>
+        <div class="input-group"><label>السجل التجاري</label><input id="editCommercialReg" value="${currentData.commercialReg || ''}"></div>
+        <div class="input-group"><label>العنوان</label><input id="editAddress" value="${currentData.address || ''}"></div>
+        <div class="input-group"><label>الحالة</label>
+          <select id="editStatus">
+            <option value="pending" ${currentData.signedStatus === 'pending' ? 'selected' : ''}>⏳ قيد الانتظار</option>
+            <option value="signed" ${currentData.signedStatus === 'signed' ? 'selected' : ''}>✅ تم التوقيع</option>
+            <option value="approved" ${currentData.signedStatus === 'approved' ? 'selected' : ''}>📋 معتمد</option>
+          </select>
+        </div>
+        <div class="input-group"><label>الخدمات (JSON)</label><textarea id="editItems" rows="8">${itemsJson}</textarea></div>
+        <div class="input-group"><label>ملاحظات الدفع</label><textarea id="editNotes" rows="3">${currentData.notes || ''}</textarea></div>
+      `;
+      
+      document.getElementById("editForm").innerHTML = html;
+      document.getElementById("editModal").style.display = "block";
+    }
+    
+    function closeEdit() {
+      document.getElementById("editModal").style.display = "none";
+    }
+    
+    async function saveEdit() {
       try {
+        const newItems = JSON.parse(document.getElementById("editItems").value);
+        const newTotal = newItems.reduce((sum, item) => sum + (item.qty * item.unitPrice), 0);
+        
+        const newData = {
+          clientName: document.getElementById("editClientName").value,
+          taxNumber: document.getElementById("editTaxNumber").value,
+          commercialReg: document.getElementById("editCommercialReg").value,
+          address: document.getElementById("editAddress").value,
+          signedStatus: document.getElementById("editStatus").value,
+          notes: document.getElementById("editNotes").value,
+          currency: currentData.currency,
+          items: newItems,
+          total: newTotal
+        };
+        
         const res = await fetch(apiUrl(), {
           method: "POST",
           headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "delete", quoteNo: currentQuoteNo })
+          body: JSON.stringify({ action: "update", quoteNo: currentQuoteNo, data: newData })
         });
-
+        
         const json = await res.json();
         if (json.ok) {
-          document.getElementById("result").innerHTML = '<div class="message success">تم حذف الملف بنجاح</div>';
-          document.getElementById("actions").style.display = "none";
+          alert(`✅ تم التعديل بنجاح - الإصدار ${json.version}`);
+          closeEdit();
+          searchQuote();
         } else {
-          document.getElementById("result").innerHTML = '<div class="message error">خطأ: ' + json.message + '</div>';
+          alert("خطأ: " + json.message);
         }
       } catch (err) {
-        document.getElementById("result").innerHTML = '<div class="message error">خطأ: ' + err.message + '</div>';
+        alert("خطأ في البيانات: " + err.message);
+      }
+    }
+    
+    async function showHistory() {
+      const res = await fetch(apiUrl() + "?action=history&quoteNo=" + encodeURIComponent(currentQuoteNo));
+      const json = await res.json();
+      
+      if (json.ok && json.history && json.history.length > 0) {
+        let html = '<div style="margin-bottom: 20px;">';
+        json.history.sort((a,b) => b.version - a.version).forEach(h => {
+          html += `
+            <div class="version-item">
+              <div>
+                <strong>الإصدار ${h.version}</strong><br>
+                <small>${new Date(h.date).toLocaleString()}</small>
+              </div>
+              <div>
+                <button class="btn btn-primary btn-small" onclick="restoreVersion(${h.version})">استرجاع</button>
+                <button class="btn btn-info btn-small" onclick="viewVersion(${h.version})">عرض</button>
+              </div>
+            </div>
+          `;
+        });
+        html += '</div>';
+        document.getElementById("historyList").innerHTML = html;
+        document.getElementById("historyModal").style.display = "block";
+      } else {
+        alert("لا يوجد سجل تعديلات لهذا العرض");
+      }
+    }
+    
+    function closeHistory() {
+      document.getElementById("historyModal").style.display = "none";
+    }
+    
+    async function restoreVersion(version) {
+      if (!confirm(`هل أنت متأكد من استرجاع الإصدار ${version}؟`)) return;
+      
+      const res = await fetch(apiUrl(), {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "restore", quoteNo: currentQuoteNo, version: version })
+      });
+      
+      const json = await res.json();
+      if (json.ok) {
+        alert("✅ تم الاسترجاع بنجاح");
+        closeHistory();
+        searchQuote();
+      } else {
+        alert("خطأ: " + json.message);
+      }
+    }
+    
+    async function viewVersion(version) {
+      const res = await fetch(apiUrl() + "?action=getVersion&quoteNo=" + encodeURIComponent(currentQuoteNo) + "&version=" + version);
+      const json = await res.json();
+      
+      if (json.ok && json.pdfUrl) {
+        window.open(json.pdfUrl, '_blank');
+      } else {
+        alert("لا يمكن عرض هذا الإصدار");
+      }
+    }
+    
+    async function deleteQuote() {
+      if (!confirm(`هل أنت متأكد من حذف عرض السعر ${currentQuoteNo}؟\nسيتم حذف الملف من Drive والبيانات من Sheets`)) return;
+      
+      const res = await fetch(apiUrl(), {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "delete", quoteNo: currentQuoteNo })
+      });
+      
+      const json = await res.json();
+      if (json.ok) {
+        alert("✅ تم الحذف بنجاح");
+        document.getElementById("result").innerHTML = '<div class="message success">تم حذف عرض السعر</div>';
+      } else {
+        alert("خطأ: " + json.message);
       }
     }
   </script>
