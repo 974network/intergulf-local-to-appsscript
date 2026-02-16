@@ -25,13 +25,13 @@
 </head>
 <body>
   <div class="top">
-    <div class="brand">Inter Gulf — Local Quotation</div>
+    <div class="brand">Inter Gulf — Quotation</div>
     <a href="./search.html">Search</a>
   </div>
 
   <div class="card">
     <div class="muted">
-      Logo is automatic from <b>public/logo.png</b> (embedded in PDF).
+      Logo: optional from <b>logo.png</b>. If missing, Apps Script will use Drive logo automatically.
     </div>
 
     <div class="row3">
@@ -145,17 +145,26 @@
   <script>
     function apiUrl(){
       const u = (window.APP_SCRIPT_URL || "").trim();
-      if(!u || u.includes("PASTE_YOUR")) throw new Error("Set APP_SCRIPT_URL in config.js");
+      if(!u) throw new Error("APP_SCRIPT_URL missing in config.js");
       return u;
     }
 
-    // ✅ Load local logo.png and convert to data URL (Base64)
-    async function fetchLogoDataUrl(){
-  const v = (window.LOGO_DATA_URL || "").trim();
-  if(v.startsWith("data:image/")) return v;
-  throw new Error("LOGO_DATA_URL is missing in config.js");
-}
-
+    // optional logo from site (if logo.png exists)
+    async function tryFetchLogoDataUrl(){
+      try{
+        const res = await fetch("./logo.png?v=" + Date.now(), { cache: "no-store" });
+        if(!res.ok) return "";
+        const blob = await res.blob();
+        return await new Promise((resolve, reject)=>{
+          const r = new FileReader();
+          r.onload = ()=> resolve(String(r.result||""));
+          r.onerror = ()=> reject(new Error("logo.png read failed"));
+          r.readAsDataURL(blob);
+        });
+      }catch{
+        return "";
+      }
+    }
 
     function renderPaymentFields(){
       const t = document.getElementById("payType").value;
@@ -252,7 +261,6 @@
       document.getElementById("totalOut").textContent = currency + " " + total.toLocaleString();
     }
 
-    // default row
     addRow({ qty:1, description:"Social Media Management", unitPrice:15000 });
 
     // presets
@@ -314,8 +322,7 @@
       document.getElementById("out").textContent = "Working...";
 
       try{
-        // ✅ logo from public/logo.png
-        const logoDataUrl = await fetchLogoDataUrl();
+        const logoDataUrl = await tryFetchLogoDataUrl(); // may be empty => script fallback to Drive
 
         const data = {
           clientName,
@@ -332,7 +339,7 @@
 
         const res = await fetch(apiUrl(), {
           method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" }, // avoid CORS preflight
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify({ action:"create", data })
         });
 
