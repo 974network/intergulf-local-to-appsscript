@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Inter Gulf | Search</title>
+  <title>Inter Gulf | Local Search</title>
   <style>
     body{font-family:Arial,sans-serif;max-width:860px;margin:24px auto;padding:0 16px;color:#111;}
     .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
@@ -12,62 +12,102 @@
     input{width:100%;padding:10px;border:1px solid #ccc;border-radius:10px;}
     button{padding:10px 14px;border:0;border-radius:10px;cursor:pointer;font-weight:800;margin-top:10px;}
     .muted{color:#666;font-size:12px;}
-    .danger{background:#ffe9e9;}
     a{word-break:break-all;}
+    .danger{background:#ffe9e9;}
+    .err{color:#c00;}
   </style>
 </head>
 <body>
   <div class="top">
-    <div class="brand">Search Quote</div>
-    <a href="./">Create</a>
+    <div class="brand">Search Quote (Local)</div>
+    <a href="./index.html">Create</a>
   </div>
 
   <div class="card">
     <div class="muted">Example: IG-QUO-2026-0001</div>
-    <input id="q" placeholder="IG-QUO-2026-0001">
+    <input id="q" placeholder="IG-QUO-2026-0001" />
     <button onclick="searchQuote()">Search</button>
 
     <div id="out" style="margin-top:12px;"></div>
     <div id="actions" style="margin-top:12px; display:none; gap:8px;"></div>
   </div>
 
-<script>
-  var lastQuoteNo = "";
-
-  function searchQuote(){
-    var quoteNo = String(document.getElementById("q").value || "").trim();
-    lastQuoteNo = quoteNo;
-
-    var out = document.getElementById("out");
-    var actions = document.getElementById("actions");
-
-    if(!quoteNo){
-      out.innerHTML = "<b>Type Quote No.</b>";
-      actions.style.display = "none";
-      return;
+  <script src="./config.js"></script>
+  <script>
+    function apiUrl(){
+      var u = String(window.APP_SCRIPT_URL || "").trim();
+      if(!u || u.indexOf("/exec") === -1 || u.indexOf("PASTE_YOUR") !== -1){
+        throw new Error("Set APP_SCRIPT_URL in config.js");
+      }
+      return u;
     }
 
-    out.textContent = "Searching...";
-    actions.style.display = "none";
+    var lastQuoteNo = "";
 
-    var url = location.origin + location.pathname + "?action=search&quoteNo=" + encodeURIComponent(quoteNo);
+    function escapeHtml(s){
+      return String(s || "")
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;");
+    }
 
-    var xhr = new XMLHttpRequest();
-    xhr.open("GET", url, true);
-    xhr.onreadystatechange = function(){
-      if(xhr.readyState !== 4) return;
+    function getJson(url, cb){
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", url, true);
+      xhr.onreadystatechange = function(){
+        if(xhr.readyState !== 4) return;
+        cb(xhr.status, xhr.responseText);
+      };
+      xhr.send();
+    }
 
-      try{
-        var json = JSON.parse(xhr.responseText);
+    function postJson(url, obj, cb){
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", url, true);
+      xhr.setRequestHeader("Content-Type", "text/plain;charset=utf-8");
+      xhr.onreadystatechange = function(){
+        if(xhr.readyState !== 4) return;
+        cb(xhr.status, xhr.responseText);
+      };
+      xhr.send(JSON.stringify(obj));
+    }
+
+    function searchQuote(){
+      var quoteNo = document.getElementById("q").value.trim();
+      lastQuoteNo = quoteNo;
+
+      var out = document.getElementById("out");
+      var actions = document.getElementById("actions");
+
+      if(!quoteNo){
+        out.innerHTML = "<b>Type Quote No.</b>";
+        actions.style.display = "none";
+        return;
+      }
+
+      out.textContent = "Searching...";
+      actions.style.display = "none";
+
+      var url = apiUrl() + "?action=search&quoteNo=" + encodeURIComponent(quoteNo);
+
+      getJson(url, function(status, text){
+        var json;
+        try { json = JSON.parse(text); }
+        catch(e){
+          out.innerHTML = "<b class='err'>Server returned non-JSON:</b><br><pre style='white-space:pre-wrap'>" + escapeHtml(text) + "</pre>";
+          return;
+        }
+
         if(json.ok){
           var pdfLink = (json.pdfUrl && json.pdfUrl !== "DELETED")
-            ? "<a target='_blank' href='"+json.pdfUrl+"'>Open PDF</a>"
+            ? "<a target='_blank' href='" + escapeHtml(json.pdfUrl) + "'>Open PDF</a>"
             : "<b>PDF:</b> DELETED";
 
           out.innerHTML =
-            "Client: <b>"+json.clientName+"</b><br>" +
-            "Service: "+json.service+"<br>" +
-            "Quote: <b>"+json.quoteNo+"</b><br>" +
+            "Client: <b>" + escapeHtml(json.clientName) + "</b><br>" +
+            "Service: " + escapeHtml(json.service) + "<br>" +
+            "Quote: <b>" + escapeHtml(json.quoteNo) + "</b><br>" +
             pdfLink;
 
           actions.style.display = "flex";
@@ -75,42 +115,36 @@
         } else {
           out.innerHTML = "<b>Not found</b>";
         }
-      } catch(e){
-        out.innerHTML = "<b>Error:</b><br><pre style='white-space:pre-wrap'>" + xhr.responseText + "</pre>";
-      }
-    };
-    xhr.send();
-  }
+      });
+    }
 
-  function deletePdf(){
-    if(!lastQuoteNo) return;
-    if(!confirm("Delete PDF for " + lastQuoteNo + " ?")) return;
+    function deletePdf(){
+      if(!lastQuoteNo) return;
 
-    var out = document.getElementById("out");
-    var actions = document.getElementById("actions");
+      var ok = confirm("Delete PDF for " + lastQuoteNo + " ?\nThis moves the file to Drive Trash.");
+      if(!ok) return;
 
-    out.textContent = "Deleting...";
+      var out = document.getElementById("out");
+      var actions = document.getElementById("actions");
 
-    var xhr = new XMLHttpRequest();
-    xhr.open("POST", location.origin + location.pathname, true);
-    xhr.setRequestHeader("Content-Type", "text/plain;charset=utf-8");
-    xhr.onreadystatechange = function(){
-      if(xhr.readyState !== 4) return;
+      out.textContent = "Deleting...";
 
-      try{
-        var json = JSON.parse(xhr.responseText);
+      postJson(apiUrl(), { action:"delete", quoteNo:lastQuoteNo }, function(status, text){
+        var json;
+        try { json = JSON.parse(text); }
+        catch(e){
+          out.innerHTML = "<b class='err'>Server returned non-JSON:</b><br><pre style='white-space:pre-wrap'>" + escapeHtml(text) + "</pre>";
+          return;
+        }
+
         if(json.ok){
-          out.innerHTML = "<b>Deleted.</b><br>" + (json.message || "");
+          out.innerHTML = "<b>Deleted.</b><br>" + escapeHtml(json.message || "");
           actions.style.display = "none";
         } else {
-          out.innerHTML = "<b>Error:</b> " + (json.message || "Unknown");
+          out.innerHTML = "<b class='err'>Error:</b> " + escapeHtml(json.message || "Unknown");
         }
-      } catch(e){
-        out.innerHTML = "<b>Error:</b><br><pre style='white-space:pre-wrap'>" + xhr.responseText + "</pre>";
-      }
-    };
-    xhr.send(JSON.stringify({ action:"delete", quoteNo:lastQuoteNo }));
-  }
-</script>
+      });
+    }
+  </script>
 </body>
 </html>
