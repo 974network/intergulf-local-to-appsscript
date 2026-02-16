@@ -1,0 +1,357 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Inter Gulf | Local Create Quote</title>
+  <style>
+    body{font-family:Arial,sans-serif;max-width:980px;margin:24px auto;padding:0 16px;color:#111;}
+    .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+    .brand{font-weight:900;font-size:18px;}
+    .card{border:1px solid #ddd;border-radius:14px;padding:16px;margin-bottom:14px;}
+    label{display:block;font-weight:700;margin:10px 0 6px;}
+    input,select,textarea{width:100%;padding:10px;border:1px solid #ccc;border-radius:10px;}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+    button{padding:10px 14px;border:0;border-radius:10px;cursor:pointer;font-weight:800;}
+    .muted{color:#666;font-size:12px;}
+    table{width:100%;border-collapse:collapse;margin-top:10px;}
+    th,td{border-bottom:1px solid #eee;padding:8px 6px;vertical-align:top;}
+    th{font-size:12px;text-align:left;}
+    .right{text-align:right;}
+    .pill{display:inline-block;padding:2px 8px;border:1px solid #ddd;border-radius:999px;font-size:12px;}
+    a{word-break:break-all;}
+  </style>
+</head>
+<body>
+  <div class="top">
+    <div class="brand">Inter Gulf — Local Quotation</div>
+    <a href="./search.html">Search</a>
+  </div>
+
+  <div class="card">
+    <div class="muted">
+      Logo is automatic from <b>public/logo.png</b> (embedded in PDF).
+    </div>
+
+    <div class="row3">
+      <div>
+        <label>Client Name *</label>
+        <input id="clientName" placeholder="Client name" />
+      </div>
+      <div>
+        <label>Currency</label>
+        <select id="currency" onchange="calcTotal()">
+          <option value="QAR">QAR</option>
+          <option value="USD">USD</option>
+          <option value="SYP">SYP</option>
+          <option value="EUR">EUR</option>
+          <option value="TRY">TRY</option>
+        </select>
+      </div>
+      <div>
+        <label>Website?</label>
+        <select id="website">
+          <option value="No">No</option>
+          <option value="Yes">Yes</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label>Start Date</label>
+        <input id="startDate" type="date" />
+      </div>
+      <div>
+        <label>End Date</label>
+        <input id="endDate" type="date" />
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label>Payment Method</label>
+        <select id="payType" onchange="renderPaymentFields()">
+          <option value="">—</option>
+          <option value="paypal">PayPal</option>
+          <option value="bank">Bank Transfer</option>
+          <option value="cash">Cash</option>
+        </select>
+      </div>
+      <div></div>
+    </div>
+
+    <div id="payFields"></div>
+
+    <label>Notes (optional)</label>
+    <textarea id="notes" rows="3" placeholder="Any notes..."></textarea>
+
+    <label>Terms (optional)</label>
+    <textarea id="terms" rows="4" placeholder="If empty, default terms will appear in the PDF."></textarea>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+      <div>
+        <b>Saved Services</b> <span class="pill">local</span>
+        <div class="muted">Save first item as preset → reuse it anytime.</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="savePreset()">Save first item</button>
+        <button onclick="clearPresets()">Clear presets</button>
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label>Pick Preset</label>
+        <select id="presetPick" onchange="applyPreset()"></select>
+      </div>
+      <div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <b>Items</b>
+      <button onclick="addRow()">+ Add item</button>
+    </div>
+
+    <table id="itemsTable">
+      <thead>
+        <tr>
+          <th style="width:10%;">Qty</th>
+          <th>Description</th>
+          <th class="right" style="width:20%;">Unit Price</th>
+          <th class="right" style="width:20%;">Amount</th>
+          <th style="width:10%;"></th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <div class="right" style="margin-top:10px;">
+      <b>Total:</b> <span id="totalOut">0</span>
+    </div>
+
+    <div style="margin-top:12px;display:flex;gap:10px;align-items:center;">
+      <button onclick="createQuote()">Generate PDF</button>
+      <div id="out" class="muted"></div>
+    </div>
+  </div>
+
+  <script src="./config.js"></script>
+  <script>
+    function apiUrl(){
+      const u = (window.APP_SCRIPT_URL || "").trim();
+      if(!u || u.includes("PASTE_YOUR")) throw new Error("Set APP_SCRIPT_URL in config.js");
+      return u;
+    }
+
+    // ✅ Load local logo.png and convert to data URL (Base64)
+    async function fetchLogoDataUrl(){
+      const res = await fetch("./logo.png", { cache: "no-store" });
+      if(!res.ok) throw new Error("logo.png not found. Put it in public/logo.png");
+      const blob = await res.blob();
+      return await new Promise((resolve, reject)=>{
+        const r = new FileReader();
+        r.onload = ()=> resolve(String(r.result||""));
+        r.onerror = ()=> reject(new Error("logo.png read failed"));
+        r.readAsDataURL(blob);
+      });
+    }
+
+    function renderPaymentFields(){
+      const t = document.getElementById("payType").value;
+      const el = document.getElementById("payFields");
+
+      if(t === "paypal"){
+        el.innerHTML = `
+          <div class="row">
+            <div>
+              <label>PayPal Email</label>
+              <input id="paypalEmail" placeholder="name@example.com">
+            </div>
+            <div></div>
+          </div>`;
+      } else if(t === "bank"){
+        el.innerHTML = `
+          <div class="row">
+            <div><label>Bank Name</label><input id="bankName" placeholder="Bank name"></div>
+            <div><label>Holder</label><input id="holder" placeholder="Account holder"></div>
+          </div>
+          <div class="row">
+            <div><label>IBAN</label><input id="iban" placeholder="IBAN"></div>
+            <div><label>Account No.</label><input id="accountNo" placeholder="Account number"></div>
+          </div>
+          <div class="row">
+            <div><label>SWIFT</label><input id="swift" placeholder="SWIFT"></div>
+            <div></div>
+          </div>`;
+      } else if(t === "cash"){
+        el.innerHTML = `<div class="muted" style="margin-top:8px;">Cash payment selected.</div>`;
+      } else {
+        el.innerHTML = "";
+      }
+    }
+    renderPaymentFields();
+
+    function getPayment(){
+      const type = document.getElementById("payType").value;
+      if(!type) return { type:"" };
+      if(type === "paypal"){
+        return { type:"paypal", paypalEmail: (document.getElementById("paypalEmail")?.value || "").trim() };
+      }
+      if(type === "bank"){
+        return {
+          type:"bank",
+          bankName:(document.getElementById("bankName")?.value || "").trim(),
+          holder:(document.getElementById("holder")?.value || "").trim(),
+          iban:(document.getElementById("iban")?.value || "").trim(),
+          accountNo:(document.getElementById("accountNo")?.value || "").trim(),
+          swift:(document.getElementById("swift")?.value || "").trim()
+        };
+      }
+      return { type:"cash" };
+    }
+
+    const tbody = document.querySelector("#itemsTable tbody");
+
+    function addRow(pref={}){
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><input class="qty" type="number" min="1" value="${pref.qty ?? 1}"></td>
+        <td><input class="desc" placeholder="Service description" value="${pref.description ?? ""}"></td>
+        <td class="right"><input class="unit" type="number" min="0" value="${pref.unitPrice ?? 0}"></td>
+        <td class="right"><span class="amt">0</span></td>
+        <td class="right"><button onclick="removeRow(this)">X</button></td>
+      `;
+      tbody.appendChild(tr);
+      tr.querySelectorAll("input").forEach(inp=> inp.addEventListener("input", calcTotal));
+      calcTotal();
+    }
+
+    function removeRow(btn){ btn.closest("tr").remove(); calcTotal(); }
+
+    function getItems(){
+      const rows = [...tbody.querySelectorAll("tr")];
+      return rows.map(r=>{
+        const qty = Number(r.querySelector(".qty").value || 0);
+        const description = String(r.querySelector(".desc").value || "").trim();
+        const unitPrice = Number(r.querySelector(".unit").value || 0);
+        return { qty, description, unitPrice };
+      }).filter(x=>x.description);
+    }
+
+    function calcTotal(){
+      const currency = document.getElementById("currency").value;
+      let total = 0;
+      [...tbody.querySelectorAll("tr")].forEach(r=>{
+        const qty = Number(r.querySelector(".qty").value || 0);
+        const unit = Number(r.querySelector(".unit").value || 0);
+        const amt = qty*unit;
+        r.querySelector(".amt").textContent = currency + " " + amt.toLocaleString();
+        total += amt;
+      });
+      document.getElementById("totalOut").textContent = currency + " " + total.toLocaleString();
+    }
+
+    // default row
+    addRow({ qty:1, description:"Social Media Management", unitPrice:15000 });
+
+    // presets
+    const PRESET_KEY = "ig_service_presets_v1";
+    function loadPresets(){ try { return JSON.parse(localStorage.getItem(PRESET_KEY) || "[]"); } catch { return []; } }
+    function savePresets(p){ localStorage.setItem(PRESET_KEY, JSON.stringify(p)); }
+    function refreshPresetPick(){
+      const presets = loadPresets();
+      const sel = document.getElementById("presetPick");
+      sel.innerHTML = `<option value="">—</option>` + presets.map((p,i)=>`<option value="${i}">${p.name}</option>`).join("");
+    }
+    refreshPresetPick();
+
+    function savePreset(){
+      const items = getItems();
+      if(!items.length){ alert("Add at least one item first."); return; }
+      const first = items[0];
+      const name = prompt("Preset name:", first.description);
+      if(!name) return;
+      const presets = loadPresets();
+      presets.push({ name, qty:first.qty, description:first.description, unitPrice:first.unitPrice });
+      savePresets(presets);
+      refreshPresetPick();
+      alert("Saved.");
+    }
+
+    function clearPresets(){
+      if(!confirm("Clear all presets?")) return;
+      savePresets([]);
+      refreshPresetPick();
+    }
+
+    function applyPreset(){
+      const idx = document.getElementById("presetPick").value;
+      if(idx === "") return;
+      const presets = loadPresets();
+      const p = presets[Number(idx)];
+      if(!p) return;
+
+      const firstRow = tbody.querySelector("tr");
+      if(!firstRow){
+        addRow({ qty:p.qty, description:p.description, unitPrice:p.unitPrice });
+      } else {
+        firstRow.querySelector(".qty").value = p.qty;
+        firstRow.querySelector(".desc").value = p.description;
+        firstRow.querySelector(".unit").value = p.unitPrice;
+        calcTotal();
+      }
+    }
+
+    async function createQuote(){
+      const clientName = document.getElementById("clientName").value.trim();
+      if(!clientName){ document.getElementById("out").innerHTML = "<b>Client Name required.</b>"; return; }
+
+      const currency = document.getElementById("currency").value;
+      const items = getItems();
+      if(!items.length){ document.getElementById("out").innerHTML = "<b>Add at least one item.</b>"; return; }
+
+      document.getElementById("out").textContent = "Working...";
+
+      try{
+        // ✅ logo from public/logo.png
+        const logoDataUrl = await fetchLogoDataUrl();
+
+        const data = {
+          clientName,
+          currency,
+          items,
+          startDate: document.getElementById("startDate").value,
+          endDate: document.getElementById("endDate").value,
+          website: document.getElementById("website").value,
+          notes: document.getElementById("notes").value.trim(),
+          terms: document.getElementById("terms").value.trim(),
+          payment: getPayment(),
+          logoDataUrl
+        };
+
+        const res = await fetch(apiUrl(), {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" }, // avoid CORS preflight
+          body: JSON.stringify({ action:"create", data })
+        });
+
+        const json = await res.json();
+        if(json.ok){
+          document.getElementById("out").innerHTML =
+            `Done — <b>${json.quoteNo}</b> — <a target="_blank" href="${json.pdfUrl}">Open PDF</a>`;
+        } else {
+          document.getElementById("out").innerHTML = "<b>Error:</b> " + (json.message || "Unknown");
+        }
+      }catch(err){
+        document.getElementById("out").innerHTML = "<b>Error:</b> " + err.message;
+      }
+    }
+  </script>
+</body>
+</html>
