@@ -111,82 +111,77 @@
     const json = await res.json();
     
     if (json.ok) {
-      // حفظ جميع البيانات في currentData
-      currentData = {
-        quoteNo: json.quoteNo,
-        clientName: json.clientName || '',
-        taxNumber: json.taxNumber || '',           // الرقم الضريبي
-        commercialReg: json.commercialReg || '',    // السجل التجاري
-        address: json.address || '',                 // العنوان
-        startDate: json.startDate || '',             // تاريخ البداية
-        endDate: json.endDate || '',                 // تاريخ النهاية
-        currency: json.currency || 'QAR',
-        signedStatus: json.signedStatus || 'pending',
-        items: json.items || [],
-        total: json.total || 0,
-        notes: json.notes || '',
-        payment: json.payment || {},
-        pdfUrl: json.pdfUrl,
-        createdAt: json.createdAt
-      };
-      
-      // عرض جميع البيانات في صفحة البحث
-      let itemsHtml = '';
-      if (currentData.items && currentData.items.length > 0) {
-        itemsHtml = '<table class="items-table"><tr><th>الخدمة</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr>';
-        currentData.items.forEach(item => {
-          const total = item.qty * item.unitPrice;
-          itemsHtml += `<tr>
-            <td>${item.description}</td>
-            <td>${item.qty}</td>
-            <td>${currentData.currency} ${item.unitPrice}</td>
-            <td>${currentData.currency} ${total}</td>
-          </tr>`;
-        });
-        itemsHtml += '</table>';
-      }
-      
-      const pdfLink = (json.pdfUrl && json.pdfUrl !== "DELETED")
-        ? `<a href="${json.pdfUrl}" target="_blank" class="btn btn-success" style="margin:10px 0;"><i class="fas fa-file-pdf"></i> عرض PDF الحالي</a>`
-        : '<p class="message error">الملف محذوف</p>';
-      
-      // عرض النتيجة مع جميع البيانات
-      document.getElementById("result").innerHTML = `
-        <div class="glass-card">
-          <div style="display: grid; grid-template-columns: repeat(3,1fr); gap: 15px; margin-bottom: 20px;">
-            <div><span class="label">رقم عرض السعر</span><br><strong>${currentData.quoteNo}</strong></div>
-            <div><span class="label">العميل</span><br><strong>${currentData.clientName}</strong></div>
-            <div><span class="label">المجموع</span><br><strong>${currentData.currency} ${currentData.total}</strong></div>
-            <div><span class="label">الحالة</span><br><strong>${currentData.signedStatus === 'signed' ? '✅ تم التوقيع' : (currentData.signedStatus === 'approved' ? '📋 معتمد' : '⏳ قيد الانتظار')}</strong></div>
-            <div><span class="label">التاريخ</span><br><strong>${new Date(currentData.createdAt).toLocaleDateString()}</strong></div>
-          </div>
-          
-          <!-- البيانات الإضافية -->
-          <div style="display: grid; grid-template-columns: repeat(3,1fr); gap: 15px; margin: 20px 0; padding: 15px; background: #f8fafd; border-radius: 10px;">
-            <div><span class="label">الرقم الضريبي</span><br><strong>${currentData.taxNumber || '—'}</strong></div>
-            <div><span class="label">السجل التجاري</span><br><strong>${currentData.commercialReg || '—'}</strong></div>
-            <div><span class="label">العنوان</span><br><strong>${currentData.address || '—'}</strong></div>
-            <div><span class="label">تاريخ البداية</span><br><strong>${currentData.startDate || '—'}</strong></div>
-            <div><span class="label">تاريخ النهاية</span><br><strong>${currentData.endDate || '—'}</strong></div>
-          </div>
-          
-          ${itemsHtml}
-          
-          <div style="margin: 15px 0;">${pdfLink}</div>
-          
-          <div style="display: flex; gap: 10px; margin-top: 20px;">
-            <button class="btn btn-primary" onclick="openEditModal()"><i class="fas fa-edit"></i> تعديل</button>
-            <button class="btn btn-info" onclick="showHistory()"><i class="fas fa-history"></i> سجل التعديلات</button>
-            <button class="btn btn-danger" onclick="deleteQuote()"><i class="fas fa-trash"></i> حذف</button>
-          </div>
-        </div>
-      `;
-    } else {
-      document.getElementById("result").innerHTML = '<div class="message error">عرض السعر غير موجود</div>';
-    }
-  } catch (err) {
-    document.getElementById("result").innerHTML = '<div class="message error">خطأ: ' + err.message + '</div>';
+  // حفظ جميع البيانات بشكل صحيح
+  currentData = {
+    quoteNo: json.quoteNo || '',
+    clientName: json.clientName || '',
+    taxNumber: json.taxNumber || 'غير مسجل',        // الرقم الضريبي
+    commercialReg: json.commercialReg || 'غير مسجل', // السجل التجاري
+    address: json.address || 'غير مسجل',
+    startDate: json.startDate || '',
+    endDate: json.endDate || '',
+    currency: json.currency || 'QAR',
+    signedStatus: json.signedStatus || 'pending',
+    items: json.items || [],
+    total: json.total || 0,
+    notes: json.notes || '',
+    payment: json.payment || {},
+    pdfUrl: json.pdfUrl,
+    createdAt: json.createdAt
+  };
+  
+  // عرض البيانات في صفحة البحث (عدل هذا الجزء)
+  let itemsHtml = '';
+  if (currentData.items && currentData.items.length > 0) {
+    itemsHtml = '<table class="items-table"><tr><th>الخدمة</th><th>الكمية</th><th>السعر</th><th>الإجمالي</th></tr>';
+    currentData.items.forEach(item => {
+      const total = item.qty * item.unitPrice;
+      itemsHtml += `<tr>
+        <td>${item.description}</td>
+        <td>${item.qty}</td>
+        <td>${currentData.currency} ${item.unitPrice}</td>
+        <td>${currentData.currency} ${total}</td>
+      </tr>`;
+    });
+    itemsHtml += '</table>';
   }
+  
+  const pdfLink = (json.pdfUrl && json.pdfUrl !== "DELETED")
+    ? `<a href="${json.pdfUrl}" target="_blank" class="btn btn-success" style="margin:10px 0;"><i class="fas fa-file-pdf"></i> عرض PDF الحالي</a>`
+    : '<p class="message error">الملف محذوف</p>';
+  
+  // عرض النتيجة مع جميع البيانات
+  document.getElementById("result").innerHTML = `
+    <div class="glass-card">
+      <!-- البيانات الأساسية -->
+      <div style="display: grid; grid-template-columns: repeat(3,1fr); gap: 15px; margin-bottom: 20px;">
+        <div><span class="label">رقم عرض السعر</span><br><strong>${currentData.quoteNo}</strong></div>
+        <div><span class="label">العميل</span><br><strong>${currentData.clientName}</strong></div>
+        <div><span class="label">المجموع</span><br><strong>${currentData.currency} ${currentData.total}</strong></div>
+        <div><span class="label">الحالة</span><br><strong>${currentData.signedStatus === 'signed' ? '✅ تم التوقيع' : (currentData.signedStatus === 'approved' ? '📋 معتمد' : '⏳ قيد الانتظار')}</strong></div>
+        <div><span class="label">التاريخ</span><br><strong>${new Date(currentData.createdAt).toLocaleDateString()}</strong></div>
+      </div>
+      
+      <!-- البيانات الإضافية (السجل التجاري والرقم الضريبي والعنوان والتواريخ) -->
+      <div style="display: grid; grid-template-columns: repeat(3,1fr); gap: 15px; margin: 20px 0; padding: 15px; background: #f8fafd; border-radius: 10px;">
+        <div><span class="label">السجل التجاري</span><br><strong>${currentData.commercialReg}</strong></div>
+        <div><span class="label">الرقم الضريبي</span><br><strong>${currentData.taxNumber}</strong></div>
+        <div><span class="label">العنوان</span><br><strong>${currentData.address}</strong></div>
+        <div><span class="label">تاريخ البداية</span><br><strong>${currentData.startDate ? new Date(currentData.startDate).toLocaleDateString() : 'غير محدد'}</strong></div>
+        <div><span class="label">تاريخ النهاية</span><br><strong>${currentData.endDate ? new Date(currentData.endDate).toLocaleDateString() : 'غير محدد'}</strong></div>
+      </div>
+      
+      ${itemsHtml}
+      
+      <div style="margin: 15px 0;">${pdfLink}</div>
+      
+      <div style="display: flex; gap: 10px; margin-top: 20px;">
+        <button class="btn btn-primary" onclick="openEditModal()"><i class="fas fa-edit"></i> تعديل</button>
+        <button class="btn btn-info" onclick="showHistory()"><i class="fas fa-history"></i> سجل التعديلات</button>
+        <button class="btn btn-danger" onclick="deleteQuote()"><i class="fas fa-trash"></i> حذف</button>
+      </div>
+    </div>
+  `;
 }
     
     // استبدال دالة openEditModal الموجودة بهذا الكود المحسن
@@ -198,263 +193,128 @@ function openEditModal() {
   
   console.log("بيانات التعديل:", currentData);
   
-  // استخراج جميع البيانات مع قيم افتراضية
-  const quoteNo = currentData.quoteNo || '';
-  const clientName = currentData.clientName || '';
-  const taxNumber = currentData.taxNumber || '';
-  const commercialReg = currentData.commercialReg || '';
-  const address = currentData.address || '';
-  const startDate = currentData.startDate || '';
-  const endDate = currentData.endDate || '';
-  const currency = currentData.currency || 'QAR';
-  const signedStatus = currentData.signedStatus || 'pending';
-  const notes = currentData.notes || '';
-  const total = currentData.total || 0;
+  // تحويل التواريخ من صيغة ISO إلى yyyy-mm-dd
+  function formatDateForInput(dateStr) {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return '';
+      return date.toISOString().split('T')[0];
+    } catch (e) {
+      return '';
+    }
+  }
   
-  // بيانات الدفع
-  const payment = currentData.payment || {};
-  const paymentType = payment.type || '';
-  const bankName = payment.bankName || '';
-  const iban = payment.iban || '';
-  const paypalEmail = payment.email || '';
+  const startDateFormatted = formatDateForInput(currentData.startDate);
+  const endDateFormatted = formatDateForInput(currentData.endDate);
   
-  // بدء بناء HTML
+  // بناء HTML بسيط وواضح
   let html = `
     <div style="padding:20px; max-height:70vh; overflow-y:auto;">
       
-      <!-- رأس العرض -->
-      <div style="background: linear-gradient(135deg, #1e3c72, #2a5298); color:white; padding:20px; border-radius:15px; margin-bottom:25px; text-align:center;">
-        <div style="font-size:14px; opacity:0.9;">تعديل عرض السعر</div>
-        <div style="font-size:24px; font-weight:bold; margin:5px 0;">${quoteNo}</div>
-        <div style="font-size:14px; opacity:0.9;">تاريخ الإنشاء: ${new Date(currentData.createdAt).toLocaleDateString('ar-EG') || ''}</div>
+      <h3 style="color:#1e3c72; margin-bottom:20px;">تعديل عرض السعر: ${currentData.quoteNo}</h3>
+      
+      <!-- اسم العميل -->
+      <div style="margin-bottom:15px;">
+        <label style="display:block; margin-bottom:5px; font-weight:bold;">اسم العميل</label>
+        <input id="editClientName" value="${currentData.clientName || ''}" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px;">
       </div>
       
-      <!-- اسم العميل (مطلوب) -->
-      <div style="margin-bottom:20px;">
-        <label style="display:block; margin-bottom:8px; font-weight:bold; color:#1e3c72;">
-          <i class="fas fa-user"></i> اسم العميل <span style="color:red;">*</span>
-        </label>
-        <input id="editClientName" type="text" value="${clientName}" placeholder="أدخل اسم العميل" 
-               style="width:100%; padding:15px; border:2px solid #eef2f7; border-radius:12px; font-size:16px; background:#f8fafd;">
+      <!-- السجل التجاري -->
+      <div style="margin-bottom:15px;">
+        <label style="display:block; margin-bottom:5px; font-weight:bold;">السجل التجاري</label>
+        <input id="editCommercialReg" value="${currentData.commercialReg || ''}" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px;">
       </div>
       
-      <!-- السجل التجاري والرقم الضريبي -->
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px;">
-        <div>
-          <label style="display:block; margin-bottom:8px; font-weight:bold; color:#1e3c72;">
-            <i class="fas fa-building"></i> السجل التجاري
-          </label>
-          <input id="editCommercialReg" type="text" value="${commercialReg}" placeholder="السجل التجاري" 
-                 style="width:100%; padding:15px; border:2px solid #eef2f7; border-radius:12px; font-size:16px; background:#f8fafd;">
-        </div>
-        <div>
-          <label style="display:block; margin-bottom:8px; font-weight:bold; color:#1e3c72;">
-            <i class="fas fa-percent"></i> الرقم الضريبي
-          </label>
-          <input id="editTaxNumber" type="text" value="${taxNumber}" placeholder="الرقم الضريبي" 
-                 style="width:100%; padding:15px; border:2px solid #eef2f7; border-radius:12px; font-size:16px; background:#f8fafd;">
-        </div>
+      <!-- الرقم الضريبي -->
+      <div style="margin-bottom:15px;">
+        <label style="display:block; margin-bottom:5px; font-weight:bold;">الرقم الضريبي</label>
+        <input id="editTaxNumber" value="${currentData.taxNumber || ''}" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px;">
       </div>
       
       <!-- العنوان -->
-      <div style="margin-bottom:20px;">
-        <label style="display:block; margin-bottom:8px; font-weight:bold; color:#1e3c72;">
-          <i class="fas fa-map-marker-alt"></i> العنوان
-        </label>
-        <input id="editAddress" type="text" value="${address}" placeholder="العنوان" 
-               style="width:100%; padding:15px; border:2px solid #eef2f7; border-radius:12px; font-size:16px; background:#f8fafd;">
+      <div style="margin-bottom:15px;">
+        <label style="display:block; margin-bottom:5px; font-weight:bold;">العنوان</label>
+        <input id="editAddress" value="${currentData.address || ''}" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px;">
       </div>
       
-      <!-- تواريخ البداية والنهاية -->
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px;">
-        <div>
-          <label style="display:block; margin-bottom:8px; font-weight:bold; color:#1e3c72;">
-            <i class="fas fa-calendar-alt"></i> تاريخ البداية
-          </label>
-          <input id="editStartDate" type="date" value="${startDate}" 
-                 style="width:100%; padding:15px; border:2px solid #eef2f7; border-radius:12px; font-size:16px; background:#f8fafd;">
-        </div>
-        <div>
-          <label style="display:block; margin-bottom:8px; font-weight:bold; color:#1e3c72;">
-            <i class="fas fa-calendar-alt"></i> تاريخ النهاية
-          </label>
-          <input id="editEndDate" type="date" value="${endDate}" 
-                 style="width:100%; padding:15px; border:2px solid #eef2f7; border-radius:12px; font-size:16px; background:#f8fafd;">
-        </div>
+      <!-- تاريخ البداية -->
+      <div style="margin-bottom:15px;">
+        <label style="display:block; margin-bottom:5px; font-weight:bold;">تاريخ البداية</label>
+        <input id="editStartDate" type="date" value="${startDateFormatted}" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px;">
       </div>
       
-      <!-- الحالة والعملة -->
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px;">
-        <div>
-          <label style="display:block; margin-bottom:8px; font-weight:bold; color:#1e3c72;">
-            <i class="fas fa-tag"></i> الحالة
-          </label>
-          <select id="editStatus" style="width:100%; padding:15px; border:2px solid #eef2f7; border-radius:12px; font-size:16px; background:#f8fafd;">
-            <option value="pending" ${signedStatus === 'pending' ? 'selected' : ''}>⏳ قيد الانتظار</option>
-            <option value="signed" ${signedStatus === 'signed' ? 'selected' : ''}>✅ تم التوقيع</option>
-            <option value="approved" ${signedStatus === 'approved' ? 'selected' : ''}>📋 معتمد</option>
-          </select>
-        </div>
-        <div>
-          <label style="display:block; margin-bottom:8px; font-weight:bold; color:#1e3c72;">
-            <i class="fas fa-money-bill"></i> العملة
-          </label>
-          <select id="editCurrency" style="width:100%; padding:15px; border:2px solid #eef2f7; border-radius:12px; font-size:16px; background:#f8fafd;">
-            <option value="QAR" ${currency === 'QAR' ? 'selected' : ''}>ريال قطري</option>
-            <option value="USD" ${currency === 'USD' ? 'selected' : ''}>دولار أمريكي</option>
-            <option value="EUR" ${currency === 'EUR' ? 'selected' : ''}>يورو</option>
-          </select>
-        </div>
+      <!-- تاريخ النهاية -->
+      <div style="margin-bottom:15px;">
+        <label style="display:block; margin-bottom:5px; font-weight:bold;">تاريخ النهاية</label>
+        <input id="editEndDate" type="date" value="${endDateFormatted}" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px;">
       </div>
       
-      <!-- طريقة الدفع -->
-      <div style="margin-bottom:20px;">
-        <label style="display:block; margin-bottom:8px; font-weight:bold; color:#1e3c72;">
-          <i class="fas fa-credit-card"></i> طريقة الدفع
-        </label>
-        <select id="editPayType" onchange="togglePaymentFields()" style="width:100%; padding:15px; border:2px solid #eef2f7; border-radius:12px; font-size:16px; background:#f8fafd;">
-          <option value="">اختر طريقة الدفع</option>
-          <option value="bank" ${paymentType === 'bank' ? 'selected' : ''}>🏦 تحويل بنكي</option>
-          <option value="paypal" ${paymentType === 'paypal' ? 'selected' : ''}>💳 PayPal</option>
-          <option value="cash" ${paymentType === 'cash' ? 'selected' : ''}>💵 نقداً</option>
+      <!-- الحالة -->
+      <div style="margin-bottom:15px;">
+        <label style="display:block; margin-bottom:5px; font-weight:bold;">الحالة</label>
+        <select id="editStatus" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px;">
+          <option value="pending" ${currentData.signedStatus === 'pending' ? 'selected' : ''}>قيد الانتظار</option>
+          <option value="signed" ${currentData.signedStatus === 'signed' ? 'selected' : ''}>تم التوقيع</option>
+          <option value="approved" ${currentData.signedStatus === 'approved' ? 'selected' : ''}>معتمد</option>
         </select>
       </div>
       
-      <!-- حقول الدفع (تظهر حسب الاختيار) -->
-      <div id="editPaymentFields" style="margin-bottom:20px;">
+      <!-- العملة -->
+      <div style="margin-bottom:15px;">
+        <label style="display:block; margin-bottom:5px; font-weight:bold;">العملة</label>
+        <select id="editCurrency" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:5px;">
+          <option value="QAR" ${currentData.currency === 'QAR' ? 'selected' : ''}>ريال قطري</option>
+          <option value="USD" ${currentData.currency === 'USD' ? 'selected' : ''}>دولار أمريكي</option>
+          <option value="EUR" ${currentData.currency === 'EUR' ? 'selected' : ''}>يورو</option>
+        </select>
+      </div>
+      
+      <h4 style="margin:20px 0 10px;">الخدمات:</h4>
   `;
   
-  // إضافة حقول الدفع حسب النوع المختار
-  if (paymentType === 'bank') {
-    html += `
-      <div style="margin-bottom:15px;">
-        <label style="display:block; margin-bottom:8px; font-weight:bold; color:#1e3c72;">اسم البنك</label>
-        <input id="editBankName" type="text" value="${bankName}" placeholder="مثل: QNB - CBQ" 
-               style="width:100%; padding:15px; border:2px solid #eef2f7; border-radius:12px; font-size:16px; background:#f8fafd;">
-      </div>
-      <div style="margin-bottom:15px;">
-        <label style="display:block; margin-bottom:8px; font-weight:bold; color:#1e3c72;">رقم IBAN</label>
-        <input id="editIban" type="text" value="${iban}" placeholder="QA..." 
-               style="width:100%; padding:15px; border:2px solid #eef2f7; border-radius:12px; font-size:16px; background:#f8fafd;">
-      </div>
-    `;
-  } else if (paymentType === 'paypal') {
-    html += `
-      <div style="margin-bottom:15px;">
-        <label style="display:block; margin-bottom:8px; font-weight:bold; color:#1e3c72;">البريد الإلكتروني لـ PayPal</label>
-        <input id="editPaypalEmail" type="email" value="${paypalEmail}" placeholder="email@example.com" 
-               style="width:100%; padding:15px; border:2px solid #eef2f7; border-radius:12px; font-size:16px; background:#f8fafd;">
-      </div>
-    `;
-  } else if (paymentType === 'cash') {
-    html += `
-      <div style="background:#e8f5e9; padding:15px; border-radius:12px; color:#2e7d32;">
-        <i class="fas fa-money-bill-wave"></i> دفع نقداً
-      </div>
-    `;
-  }
-  
-  html += `</div>`;
-  
-  // الخدمات
-  html += `
-    <div style="margin:30px 0 20px;">
-      <h3 style="color:#1e3c72; margin-bottom:15px; display:flex; align-items:center; gap:10px;">
-        <i class="fas fa-list"></i> الخدمات
-      </h3>
-  `;
-  
+  // عرض الخدمات
   if (currentData.items && currentData.items.length > 0) {
     currentData.items.forEach((item, index) => {
-      const desc = item.description || '';
-      const qty = item.qty || 1;
-      const price = item.unitPrice || 0;
-      
       html += `
-        <div class="service-item" style="background:#f8fafd; border:2px solid #eef2f7; border-radius:15px; padding:20px; margin-bottom:20px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <span style="font-weight:bold; color:#1e3c72;">خدمة ${index + 1}</span>
-            <button type="button" onclick="removeService(${index})" style="background:#dc3545; color:white; border:none; width:40px; height:40px; border-radius:50%; cursor:pointer;">
-              <i class="fas fa-times"></i>
-            </button>
+        <div style="border:1px solid #ddd; padding:15px; margin-bottom:15px; border-radius:5px;">
+          <div style="margin-bottom:10px;">
+            <label>وصف الخدمة ${index+1}</label>
+            <input id="item_desc_${index}" value="${item.description || ''}" style="width:100%; padding:8px; margin-top:5px;">
           </div>
-          
-          <div style="margin-bottom:15px;">
-            <label style="display:block; margin-bottom:8px; font-weight:bold; color:#1e3c72;">وصف الخدمة</label>
-            <input id="item_desc_${index}" type="text" value="${desc}" placeholder="وصف الخدمة" 
-                   style="width:100%; padding:15px; border:2px solid #eef2f7; border-radius:12px; font-size:16px;">
-          </div>
-          
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
             <div>
-              <label style="display:block; margin-bottom:8px; font-weight:bold; color:#1e3c72;">الكمية</label>
-              <input id="item_qty_${index}" type="number" value="${qty}" min="1" 
-                     style="width:100%; padding:15px; border:2px solid #eef2f7; border-radius:12px; font-size:16px;">
+              <label>الكمية</label>
+              <input id="item_qty_${index}" type="number" value="${item.qty || 1}" style="width:100%; padding:8px;">
             </div>
             <div>
-              <label style="display:block; margin-bottom:8px; font-weight:bold; color:#1e3c72;">السعر</label>
-              <input id="item_price_${index}" type="number" value="${price}" min="0" step="0.01" 
-                     style="width:100%; padding:15px; border:2px solid #eef2f7; border-radius:12px; font-size:16px;">
+              <label>السعر</label>
+              <input id="item_price_${index}" type="number" value="${item.unitPrice || 0}" style="width:100%; padding:8px;">
             </div>
           </div>
         </div>
       `;
     });
-    
     html += `<input type="hidden" id="itemCount" value="${currentData.items.length}">`;
-  } else {
-    html += `
-      <div style="background:#f8fafd; border:2px solid #eef2f7; border-radius:15px; padding:20px; margin-bottom:20px;">
-        <div style="margin-bottom:15px;">
-          <label style="display:block; margin-bottom:8px; font-weight:bold; color:#1e3c72;">وصف الخدمة</label>
-          <input id="item_desc_0" type="text" placeholder="وصف الخدمة" 
-                 style="width:100%; padding:15px; border:2px solid #eef2f7; border-radius:12px; font-size:16px;">
-        </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
-          <div>
-            <label style="display:block; margin-bottom:8px; font-weight:bold; color:#1e3c72;">الكمية</label>
-            <input id="item_qty_0" type="number" value="1" min="1" 
-                   style="width:100%; padding:15px; border:2px solid #eef2f7; border-radius:12px; font-size:16px;">
-          </div>
-          <div>
-            <label style="display:block; margin-bottom:8px; font-weight:bold; color:#1e3c72;">السعر</label>
-            <input id="item_price_0" type="number" value="0" min="0" step="0.01" 
-                   style="width:100%; padding:15px; border:2px solid #eef2f7; border-radius:12px; font-size:16px;">
-          </div>
-        </div>
-      </div>
-    `;
-    html += `<input type="hidden" id="itemCount" value="1">`;
   }
   
+  // زر إضافة خدمة
   html += `
-    <button type="button" class="btn btn-primary" onclick="addItemField()" style="width:100%; padding:15px; margin:10px 0 30px;">
-      <i class="fas fa-plus"></i> إضافة خدمة جديدة
-    </button>
-  </div>
-  `;
-  
-  // ملاحظات
-  html += `
-    <div style="margin-bottom:25px;">
-      <label style="display:block; margin-bottom:8px; font-weight:bold; color:#1e3c72;">
-        <i class="fas fa-sticky-note"></i> ملاحظات
-      </label>
-      <textarea id="editNotes" rows="4" placeholder="ملاحظات إضافية..." 
-                style="width:100%; padding:15px; border:2px solid #eef2f7; border-radius:12px; font-size:16px; background:#f8fafd;">${notes}</textarea>
+    <button class="btn btn-primary" onclick="addItemField()" style="width:100%; margin:10px 0;">+ إضافة خدمة</button>
+    
+    <!-- ملاحظات -->
+    <div style="margin:15px 0;">
+      <label>ملاحظات</label>
+      <textarea id="editNotes" rows="3" style="width:100%; padding:10px;">${currentData.notes || ''}</textarea>
     </div>
     
-    <!-- المجموع الكلي -->
-    <div style="background: linear-gradient(135deg, #1e3c72, #2a5298); color:white; padding:25px; border-radius:15px; margin:25px 0; text-align:center;">
-      <div style="font-size:16px; opacity:0.9; margin-bottom:5px;">المجموع الكلي</div>
-      <div style="font-size:36px; font-weight:bold;">${currency} ${total}</div>
+    <!-- المجموع -->
+    <div style="background:#1e3c72; color:white; padding:15px; border-radius:5px; text-align:center; margin:20px 0;">
+      <strong>المجموع: ${currentData.currency} ${currentData.total}</strong>
     </div>
   `;
   
-  // إضافة HTML إلى النموذج
   document.getElementById("editForm").innerHTML = html;
-  
-  // عرض المودال
   document.getElementById("editModal").style.display = "block";
 }
 
