@@ -156,19 +156,34 @@
 function openEditModal() {
   if (!currentData) return;
   
-  console.log("بيانات التعديل:", currentData); // للتأكد من البيانات
+  console.log("بيانات التعديل:", currentData); // للتحقق
   
-  // بناء HTML للتعديل مع البيانات الحالية - بشكل مبسط ومضمون
+  // بناء HTML للتعديل مع جميع البيانات
   let html = `
-    <div style="max-height:70vh; overflow-y:auto; padding:10px;">
+    <div style="max-height:70vh; overflow-y:auto; padding:15px;">
+      
+      <!-- رقم عرض السعر والحالة -->
+      <div style="background:#f0f4f9; padding:15px; border-radius:12px; margin-bottom:20px;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div>
+            <small style="color:#666;">رقم عرض السعر</small>
+            <div style="font-weight:bold; font-size:18px;">${currentData.quoteNo || ''}</div>
+          </div>
+          <div>
+            <small style="color:#666;">تاريخ الإنشاء</small>
+            <div>${currentData.createdAt ? new Date(currentData.createdAt).toLocaleDateString('ar-EG') : ''}</div>
+          </div>
+        </div>
+      </div>
+      
       <!-- اسم العميل -->
       <div class="input-group">
         <label>اسم العميل *</label>
         <input id="editClientName" value="${currentData.clientName || ''}" placeholder="اسم العميل" style="width:100%; padding:12px;">
       </div>
       
-      <!-- السجل التجاري والرقم الضريبي -->
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+      <!-- السجل التجاري والرقم الضريبي معاً -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:15px 0;">
         <div class="input-group">
           <label>السجل التجاري</label>
           <input id="editCommercialReg" value="${currentData.commercialReg || ''}" placeholder="السجل التجاري" style="width:100%; padding:12px;">
@@ -186,7 +201,7 @@ function openEditModal() {
       </div>
       
       <!-- تواريخ البداية والنهاية -->
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:15px 0;">
         <div class="input-group">
           <label>تاريخ البداية</label>
           <input id="editStartDate" type="date" value="${currentData.startDate || ''}" style="width:100%; padding:12px;">
@@ -198,7 +213,7 @@ function openEditModal() {
       </div>
       
       <!-- الحالة والعملة -->
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:15px 0;">
         <div class="input-group">
           <label>الحالة</label>
           <select id="editStatus" style="width:100%; padding:12px;">
@@ -228,11 +243,11 @@ function openEditModal() {
         </select>
       </div>
       
-      <!-- حقول الدفع حسب النوع -->
-      <div id="editPaymentFields">
+      <!-- حقول الدفع -->
+      <div id="editPaymentFields" style="margin:10px 0;">
   `;
   
-  // إضافة حقول الدفع حسب نوع الدفع
+  // إضافة تفاصيل الدفع حسب النوع
   if (currentData.payment) {
     if (currentData.payment.type === 'bank') {
       html += `
@@ -259,27 +274,34 @@ function openEditModal() {
   
   html += `</div>`;
   
-  // إضافة الخدمات
-  html += `<h4 style="margin:20px 0 10px;">الخدمات:</h4>`;
+  // قسم الخدمات
+  html += `
+    <h4 style="margin:20px 0 15px; color:#1e3c72;">الخدمات:</h4>
+  `;
   
+  // عرض الخدمات الموجودة
   if (currentData.items && currentData.items.length > 0) {
     currentData.items.forEach((item, index) => {
       html += `
-        <div class="edit-item-card" style="border:1px solid #ddd; padding:15px; margin-bottom:15px; border-radius:10px; background:#f9f9f9;">
-          <div style="display:grid; grid-template-columns:1fr; gap:10px;">
+        <div class="edit-item-card" style="border:2px solid #eef2f7; padding:15px; margin-bottom:15px; border-radius:12px; background:#f8fafd;">
+          <div style="margin-bottom:10px; display:flex; justify-content:space-between;">
+            <strong>خدمة ${index + 1}</strong>
+            <button class="btn btn-danger btn-sm" onclick="removeItemField(${index})" style="padding:5px 10px; font-size:12px;">
+              <i class="fas fa-times"></i> حذف
+            </button>
+          </div>
+          <div class="input-group">
+            <label>وصف الخدمة</label>
+            <input id="item_desc_${index}" value="${item.description || ''}" placeholder="وصف الخدمة" style="width:100%; padding:12px;">
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
             <div class="input-group">
-              <label>الخدمة ${index+1}</label>
-              <input id="item_desc_${index}" value="${item.description || ''}" placeholder="وصف الخدمة" style="width:100%; padding:12px;">
+              <label>الكمية</label>
+              <input id="item_qty_${index}" type="number" value="${item.qty || 1}" min="1" style="width:100%; padding:12px;">
             </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-              <div class="input-group">
-                <label>الكمية</label>
-                <input id="item_qty_${index}" type="number" value="${item.qty || 1}" min="1" style="width:100%; padding:12px;">
-              </div>
-              <div class="input-group">
-                <label>السعر</label>
-                <input id="item_price_${index}" type="number" value="${item.unitPrice || 0}" min="0" step="0.01" style="width:100%; padding:12px;">
-              </div>
+            <div class="input-group">
+              <label>السعر</label>
+              <input id="item_price_${index}" type="number" value="${item.unitPrice || 0}" min="0" step="0.01" style="width:100%; padding:12px;">
             </div>
           </div>
         </div>
@@ -290,21 +312,22 @@ function openEditModal() {
   } else {
     // إذا مافيش خدمات، نضيف خدمة افتراضية
     html += `
-      <div class="edit-item-card" style="border:1px solid #ddd; padding:15px; margin-bottom:15px; border-radius:10px; background:#f9f9f9;">
-        <div style="display:grid; grid-template-columns:1fr; gap:10px;">
+      <div class="edit-item-card" style="border:2px solid #eef2f7; padding:15px; margin-bottom:15px; border-radius:12px; background:#f8fafd;">
+        <div style="margin-bottom:10px;">
+          <strong>خدمة 1</strong>
+        </div>
+        <div class="input-group">
+          <label>وصف الخدمة</label>
+          <input id="item_desc_0" value="" placeholder="وصف الخدمة" style="width:100%; padding:12px;">
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
           <div class="input-group">
-            <label>الخدمة 1</label>
-            <input id="item_desc_0" value="" placeholder="وصف الخدمة" style="width:100%; padding:12px;">
+            <label>الكمية</label>
+            <input id="item_qty_0" type="number" value="1" min="1" style="width:100%; padding:12px;">
           </div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-            <div class="input-group">
-              <label>الكمية</label>
-              <input id="item_qty_0" type="number" value="1" min="1" style="width:100%; padding:12px;">
-            </div>
-            <div class="input-group">
-              <label>السعر</label>
-              <input id="item_price_0" type="number" value="0" min="0" step="0.01" style="width:100%; padding:12px;">
-            </div>
+          <div class="input-group">
+            <label>السعر</label>
+            <input id="item_price_0" type="number" value="0" min="0" step="0.01" style="width:100%; padding:12px;">
           </div>
         </div>
       </div>
@@ -313,19 +336,87 @@ function openEditModal() {
   }
   
   // زر إضافة خدمة
-  html += `<button class="btn btn-primary btn-sm" onclick="addItemField()" style="width:100%; margin:10px 0;"><i class="fas fa-plus"></i> إضافة خدمة</button>`;
+  html += `
+    <button class="btn btn-primary" onclick="addItemField()" style="width:100%; margin:15px 0;">
+      <i class="fas fa-plus"></i> إضافة خدمة جديدة
+    </button>
+  `;
   
   // ملاحظات
   html += `
     <div class="input-group">
-      <label>ملاحظات</label>
-      <textarea id="editNotes" rows="3" placeholder="ملاحظات إضافية..." style="width:100%; padding:12px;">${currentData.notes || ''}</textarea>
+      <label>ملاحظات إضافية</label>
+      <textarea id="editNotes" rows="4" placeholder="ملاحظات..." style="width:100%; padding:12px;">${currentData.notes || ''}</textarea>
     </div>
-  </div> <!-- نهاية الحاوية -->
+    
+    <!-- المجموع الكلي -->
+    <div style="background:#1e3c72; color:white; padding:15px; border-radius:12px; margin:20px 0; text-align:center;">
+      <div style="font-size:14px;">المجموع الكلي</div>
+      <div style="font-size:24px; font-weight:bold;">${currentData.currency || 'QAR'} ${currentData.total || 0}</div>
+    </div>
   `;
   
   document.getElementById("editForm").innerHTML = html;
   document.getElementById("editModal").style.display = "block";
+}
+
+// دالة لحذف خدمة معينة
+function removeItemField(index) {
+  const itemCount = Number(document.getElementById("itemCount")?.value || 0);
+  
+  // إنشاء مصفوفة جديدة بدون الخدمة المحذوفة
+  const newItems = [];
+  for (let i = 0; i < itemCount; i++) {
+    if (i !== index) {
+      const desc = document.getElementById(`item_desc_${i}`)?.value;
+      const qty = document.getElementById(`item_qty_${i}`)?.value;
+      const price = document.getElementById(`item_price_${i}`)?.value;
+      
+      newItems.push({
+        desc,
+        qty,
+        price,
+        index: newItems.length // الفهرس الجديد
+      });
+      }
+  }
+  
+  // إعادة بناء الصفحة بالخدمات المتبقية
+  location.reload(); // حل سريع - أو يمكن إعادة بناء النموذج
+}
+
+// تحديث دالة addItemField
+function addItemField() {
+  const count = Number(document.getElementById("itemCount")?.value || 0);
+  const container = document.querySelector('#editForm');
+  
+  const newItemHtml = `
+    <div class="edit-item-card" style="border:2px solid #eef2f7; padding:15px; margin-bottom:15px; border-radius:12px; background:#f8fafd;">
+      <div style="margin-bottom:10px; display:flex; justify-content:space-between;">
+        <strong>خدمة جديدة</strong>
+      </div>
+      <div class="input-group">
+        <label>وصف الخدمة</label>
+        <input id="item_desc_${count}" value="" placeholder="وصف الخدمة" style="width:100%; padding:12px;">
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
+        <div class="input-group">
+          <label>الكمية</label>
+          <input id="item_qty_${count}" type="number" value="1" min="1" style="width:100%; padding:12px;">
+        </div>
+        <div class="input-group">
+          <label>السعر</label>
+          <input id="item_price_${count}" type="number" value="0" min="0" step="0.01" style="width:100%; padding:12px;">
+        </div>
+      </div>
+    </div>
+  `;
+  
+  // إدراج الخدمة الجديدة قبل آخر زر
+  const addButton = document.querySelector('#editForm .btn-primary:last-child');
+  addButton.insertAdjacentHTML('beforebegin', newItemHtml);
+  
+  document.getElementById("itemCount").value = count + 1;
 }
 // دالة جديدة لإظهار/إخفاء حقول الدفع
 function togglePaymentFields() {
