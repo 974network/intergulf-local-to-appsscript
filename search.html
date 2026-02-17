@@ -190,241 +190,472 @@
     }
     
     // ========== دوال التعديل ==========
-    function openEditModal() {
-      if (!currentData) {
-        alert("لا توجد بيانات للتعديل");
-        return;
-      }
+   // ========== دوال التعديل ==========
+function openEditModal() {
+  if (!currentData) {
+    alert("لا توجد بيانات للتعديل");
+    return;
+  }
+  
+  console.log("بيانات التعديل:", currentData);
+  
+  // دالة تنسيق التاريخ
+  function formatDateForInput(dateStr) {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return '';
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    } catch (e) {
+      return '';
+    }
+  }
+  
+  const startDateFormatted = formatDateForInput(currentData.startDate);
+  const endDateFormatted = formatDateForInput(currentData.endDate);
+  
+  const payment = currentData.payment || {};
+  const paymentType = payment.type || '';
+  const bankName = payment.bankName || '';
+  const iban = payment.iban || '';
+  const paypalEmail = payment.email || '';
+  
+  let html = `
+    <div style="padding:20px; max-height:70vh; overflow-y:auto;">
       
-      console.log("بيانات التعديل:", currentData);
+      <div style="background:#1e3c72; color:white; padding:15px; border-radius:10px; margin-bottom:20px; text-align:center;">
+        <div style="font-size:14px;">تعديل عرض السعر</div>
+        <div style="font-size:20px; font-weight:bold;">${currentData.quoteNo || ''}</div>
+      </div>
       
-      // دالة تنسيق التاريخ
-      function formatDateForInput(dateStr) {
-        if (!dateStr) return '';
-        try {
-          const date = new Date(dateStr);
-          if (isNaN(date.getTime())) return '';
-          const year = date.getFullYear();
-          const month = String(date.getMonth() + 1).padStart(2, '0');
-          const day = String(date.getDate()).padStart(2, '0');
-          return `${year}-${month}-${day}`;
-        } catch (e) {
-          return '';
-        }
-      }
+      <div style="margin-bottom:15px;">
+        <label style="display:block; margin-bottom:5px; font-weight:bold; color:#1e3c72;">اسم العميل</label>
+        <input id="editClientName" type="text" value="${currentData.clientName || ''}" 
+               style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px; font-size:15px;">
+      </div>
       
-      const startDateFormatted = formatDateForInput(currentData.startDate);
-      const endDateFormatted = formatDateForInput(currentData.endDate);
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+        <div>
+          <label style="display:block; margin-bottom:5px; font-weight:bold; color:#1e3c72;">السجل التجاري</label>
+          <input id="editCommercialReg" type="text" value="${currentData.commercialReg || ''}" 
+                 style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px; font-size:15px;">
+        </div>
+        <div>
+          <label style="display:block; margin-bottom:5px; font-weight:bold; color:#1e3c72;">الرقم الضريبي</label>
+          <input id="editTaxNumber" type="text" value="${currentData.taxNumber || ''}" 
+                 style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px; font-size:15px;">
+        </div>
+      </div>
       
-      const payment = currentData.payment || {};
-      const paymentType = payment.type || '';
-      const bankName = payment.bankName || '';
-      const iban = payment.iban || '';
-      const paypalEmail = payment.email || '';
+      <div style="margin-bottom:15px;">
+        <label style="display:block; margin-bottom:5px; font-weight:bold; color:#1e3c72;">العنوان</label>
+        <input id="editAddress" type="text" value="${currentData.address || ''}" 
+               style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px; font-size:15px;">
+      </div>
       
-      let html = `
-        <div style="padding:20px; max-height:70vh; overflow-y:auto;">
-          
-          <div style="background:#1e3c72; color:white; padding:15px; border-radius:10px; margin-bottom:20px; text-align:center;">
-            <div style="font-size:14px;">تعديل عرض السعر</div>
-            <div style="font-size:20px; font-weight:bold;">${currentData.quoteNo || ''}</div>
-          </div>
-          
-          <div style="margin-bottom:15px;">
-            <label style="display:block; margin-bottom:5px; font-weight:bold; color:#1e3c72;">اسم العميل</label>
-            <input id="editClientName" type="text" value="${currentData.clientName || ''}" 
-                   style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px; font-size:15px;">
-          </div>
-          
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
-            <div>
-              <label style="display:block; margin-bottom:5px; font-weight:bold; color:#1e3c72;">السجل التجاري</label>
-              <input id="editCommercialReg" type="text" value="${currentData.commercialReg || ''}" 
-                     style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px; font-size:15px;">
-            </div>
-            <div>
-              <label style="display:block; margin-bottom:5px; font-weight:bold; color:#1e3c72;">الرقم الضريبي</label>
-              <input id="editTaxNumber" type="text" value="${currentData.taxNumber || ''}" 
-                     style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px; font-size:15px;">
-            </div>
-          </div>
-          
-          <div style="margin-bottom:15px;">
-            <label style="display:block; margin-bottom:5px; font-weight:bold; color:#1e3c72;">العنوان</label>
-            <input id="editAddress" type="text" value="${currentData.address || ''}" 
-                   style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px; font-size:15px;">
-          </div>
-          
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
-            <div>
-              <label style="display:block; margin-bottom:5px; font-weight:bold; color:#1e3c72;">تاريخ البداية</label>
-              <input id="editStartDate" type="date" value="${startDateFormatted}" 
-                     style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px; font-size:15px;">
-            </div>
-            <div>
-              <label style="display:block; margin-bottom:5px; font-weight:bold; color:#1e3c72;">تاريخ النهاية</label>
-              <input id="editEndDate" type="date" value="${endDateFormatted}" 
-                     style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px; font-size:15px;">
-            </div>
-          </div>
-          
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
-            <div>
-              <label style="display:block; margin-bottom:5px; font-weight:bold; color:#1e3c72;">الحالة</label>
-              <select id="editStatus" style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px; font-size:15px;">
-                <option value="pending" ${currentData.signedStatus === 'pending' ? 'selected' : ''}>⏳ قيد الانتظار</option>
-                <option value="signed" ${currentData.signedStatus === 'signed' ? 'selected' : ''}>✅ تم التوقيع</option>
-                <option value="approved" ${currentData.signedStatus === 'approved' ? 'selected' : ''}>📋 معتمد</option>
-              </select>
-            </div>
-            <div>
-              <label style="display:block; margin-bottom:5px; font-weight:bold; color:#1e3c72;">العملة</label>
-              <select id="editCurrency" style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px; font-size:15px;">
-                <option value="QAR" ${currentData.currency === 'QAR' ? 'selected' : ''}>ريال قطري</option>
-                <option value="USD" ${currentData.currency === 'USD' ? 'selected' : ''}>دولار أمريكي</option>
-                <option value="EUR" ${currentData.currency === 'EUR' ? 'selected' : ''}>يورو</option>
-              </select>
-            </div>
-          </div>
-          
-          <div style="margin-bottom:15px;">
-            <label style="display:block; margin-bottom:5px; font-weight:bold; color:#1e3c72;">طريقة الدفع</label>
-            <select id="editPayType" onchange="togglePaymentFields()" style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px; font-size:15px;">
-              <option value="">اختر</option>
-              <option value="bank" ${paymentType === 'bank' ? 'selected' : ''}>🏦 تحويل بنكي</option>
-              <option value="paypal" ${paymentType === 'paypal' ? 'selected' : ''}>💳 PayPal</option>
-              <option value="cash" ${paymentType === 'cash' ? 'selected' : ''}>💵 نقداً</option>
-            </select>
-          </div>
-          
-          <div id="editPaymentFields" style="margin-bottom:15px;">
-      `;
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+        <div>
+          <label style="display:block; margin-bottom:5px; font-weight:bold; color:#1e3c72;">تاريخ البداية</label>
+          <input id="editStartDate" type="date" value="${startDateFormatted}" 
+                 style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px; font-size:15px;">
+        </div>
+        <div>
+          <label style="display:block; margin-bottom:5px; font-weight:bold; color:#1e3c72;">تاريخ النهاية</label>
+          <input id="editEndDate" type="date" value="${endDateFormatted}" 
+                 style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px; font-size:15px;">
+        </div>
+      </div>
       
-      if (paymentType === 'bank') {
-        html += `
-          <div style="margin-bottom:10px;">
-            <label style="display:block; margin-bottom:5px; font-weight:bold; color:#1e3c72;">اسم البنك</label>
-            <input id="editBankName" type="text" value="${bankName}" style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px;">
-          </div>
-          <div style="margin-bottom:10px;">
-            <label style="display:block; margin-bottom:5px; font-weight:bold; color:#1e3c72;">رقم IBAN</label>
-            <input id="editIban" type="text" value="${iban}" style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px;">
-          </div>
-        `;
-      } else if (paymentType === 'paypal') {
-        html += `
-          <div style="margin-bottom:10px;">
-            <label style="display:block; margin-bottom:5px; font-weight:bold; color:#1e3c72;">البريد الإلكتروني</label>
-            <input id="editPaypalEmail" type="email" value="${paypalEmail}" style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px;">
-          </div>
-        `;
-      } else if (paymentType === 'cash') {
-        html += `
-          <div style="background:#e8f5e9; padding:15px; border-radius:8px; color:#2e7d32;">
-            <i class="fas fa-money-bill-wave"></i> دفع نقداً
-          </div>
-        `;
-      }
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:15px;">
+        <div>
+          <label style="display:block; margin-bottom:5px; font-weight:bold; color:#1e3c72;">الحالة</label>
+          <select id="editStatus" style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px; font-size:15px;">
+            <option value="pending" ${currentData.signedStatus === 'pending' ? 'selected' : ''}>⏳ قيد الانتظار</option>
+            <option value="signed" ${currentData.signedStatus === 'signed' ? 'selected' : ''}>✅ تم التوقيع</option>
+            <option value="approved" ${currentData.signedStatus === 'approved' ? 'selected' : ''}>📋 معتمد</option>
+          </select>
+        </div>
+        <div>
+          <label style="display:block; margin-bottom:5px; font-weight:bold; color:#1e3c72;">العملة</label>
+          <select id="editCurrency" style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px; font-size:15px;">
+            <option value="QAR" ${currentData.currency === 'QAR' ? 'selected' : ''}>ريال قطري</option>
+            <option value="USD" ${currentData.currency === 'USD' ? 'selected' : ''}>دولار أمريكي</option>
+            <option value="EUR" ${currentData.currency === 'EUR' ? 'selected' : ''}>يورو</option>
+          </select>
+        </div>
+      </div>
       
-      html += `</div>`;
+      <div style="margin-bottom:15px;">
+        <label style="display:block; margin-bottom:5px; font-weight:bold; color:#1e3c72;">طريقة الدفع</label>
+        <select id="editPayType" onchange="togglePaymentFields()" style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px; font-size:15px;">
+          <option value="">اختر</option>
+          <option value="bank" ${paymentType === 'bank' ? 'selected' : ''}>🏦 تحويل بنكي</option>
+          <option value="paypal" ${paymentType === 'paypal' ? 'selected' : ''}>💳 PayPal</option>
+          <option value="cash" ${paymentType === 'cash' ? 'selected' : ''}>💵 نقداً</option>
+        </select>
+      </div>
       
-      html += `<h4 style="margin:20px 0 10px; color:#1e3c72;">الخدمات:</h4>`;
-      
-      if (currentData.items && currentData.items.length > 0) {
-        currentData.items.forEach((item, index) => {
-          html += `
-            <div style="border:2px solid #eef2f7; padding:15px; margin-bottom:15px; border-radius:8px; background:#f8fafd;">
-              <div style="margin-bottom:10px;">
-                <label style="display:block; margin-bottom:5px; font-weight:bold;">وصف الخدمة ${index+1}</label>
-                <input id="item_desc_${index}" type="text" value="${item.description || ''}" 
-                       style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px;">
-              </div>
-              <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                <div>
-                  <label style="display:block; margin-bottom:5px;">الكمية</label>
-                  <input id="item_qty_${index}" type="number" value="${item.qty || 1}" min="1" 
-                         style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px;">
-                </div>
-                <div>
-                  <label style="display:block; margin-bottom:5px;">السعر</label>
-                  <input id="item_price_${index}" type="number" value="${item.unitPrice || 0}" min="0" step="0.01" 
-                         style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px;">
-                </div>
-              </div>
-            </div>
-          `;
-        });
-        html += `<input type="hidden" id="itemCount" value="${currentData.items.length}">`;
-      } else {
-        html += `
-          <div style="border:2px solid #eef2f7; padding:15px; margin-bottom:15px; border-radius:8px; background:#f8fafd;">
-            <div style="margin-bottom:10px;">
-              <label style="display:block; margin-bottom:5px; font-weight:bold;">وصف الخدمة</label>
-              <input id="item_desc_0" type="text" value="" style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px;">
-            </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-              <div>
-                <label style="display:block; margin-bottom:5px;">الكمية</label>
-                <input id="item_qty_0" type="number" value="1" min="1" style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px;">
-              </div>
-              <div>
-                <label style="display:block; margin-bottom:5px;">السعر</label>
-                <input id="item_price_0" type="number" value="0" min="0" step="0.01" style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px;">
-              </div>
-            </div>
-          </div>
-        `;
-        html += `<input type="hidden" id="itemCount" value="1">`;
-      }
-      
+      <div id="editPaymentFields" style="margin-bottom:15px;">
+  `;
+  
+  if (paymentType === 'bank') {
+    html += `
+      <div style="margin-bottom:10px;">
+        <label style="display:block; margin-bottom:5px; font-weight:bold; color:#1e3c72;">اسم البنك</label>
+        <input id="editBankName" type="text" value="${bankName}" style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px;">
+      </div>
+      <div style="margin-bottom:10px;">
+        <label style="display:block; margin-bottom:5px; font-weight:bold; color:#1e3c72;">رقم IBAN</label>
+        <input id="editIban" type="text" value="${iban}" style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px;">
+      </div>
+    `;
+  } else if (paymentType === 'paypal') {
+    html += `
+      <div style="margin-bottom:10px;">
+        <label style="display:block; margin-bottom:5px; font-weight:bold; color:#1e3c72;">البريد الإلكتروني</label>
+        <input id="editPaypalEmail" type="email" value="${paypalEmail}" style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px;">
+      </div>
+    `;
+  } else if (paymentType === 'cash') {
+    html += `
+      <div style="background:#e8f5e9; padding:15px; border-radius:8px; color:#2e7d32;">
+        <i class="fas fa-money-bill-wave"></i> دفع نقداً
+      </div>
+    `;
+  }
+  
+  html += `</div>`;
+  
+  // الخدمات مع زر الحذف
+  html += `<h4 style="margin:20px 0 10px; color:#1e3c72;">الخدمات:</h4>`;
+  
+  if (currentData.items && currentData.items.length > 0) {
+    currentData.items.forEach((item, index) => {
+      const itemTotal = (item.qty || 1) * (item.unitPrice || 0);
       html += `
-        <button type="button" onclick="addItemField()" style="background:#28a745; color:white; border:none; padding:12px; width:100%; border-radius:8px; margin:10px 0; cursor:pointer; font-size:16px;">
-          <i class="fas fa-plus"></i> إضافة خدمة جديدة
-        </button>
-        
-        <div style="margin:20px 0;">
-          <label style="display:block; margin-bottom:5px; font-weight:bold; color:#1e3c72;">ملاحظات</label>
-          <textarea id="editNotes" rows="3" style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px;">${currentData.notes || ''}</textarea>
-        </div>
-        
-        <div style="background:#1e3c72; color:white; padding:20px; border-radius:10px; margin:20px 0; text-align:center;">
-          <div style="font-size:16px;">المجموع الكلي</div>
-          <div style="font-size:28px; font-weight:bold;">${currentData.currency || 'QAR'} ${currentData.total || 0}</div>
+        <div id="service_${index}" style="border:2px solid #eef2f7; padding:15px; margin-bottom:15px; border-radius:8px; background:#f8fafd; position:relative;">
+          
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <span style="font-weight:bold; color:#1e3c72; font-size:16px;">
+              <i class="fas fa-cube"></i> خدمة ${index + 1}
+            </span>
+            <button type="button" onclick="removeService(${index})" 
+                    style="background:#dc3545; color:white; border:none; width:40px; height:40px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 5px rgba(220,53,69,0.3);">
+              <i class="fas fa-trash-alt" style="font-size:18px;"></i>
+            </button>
+          </div>
+          
+          <div style="margin-bottom:15px;">
+            <label style="display:block; margin-bottom:5px; font-weight:bold; color:#555;">وصف الخدمة</label>
+            <input id="item_desc_${index}" type="text" value="${item.description || ''}" 
+                   placeholder="أدخل وصف الخدمة"
+                   style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px; font-size:15px; background:white;">
+          </div>
+          
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+            <div>
+              <label style="display:block; margin-bottom:5px; font-weight:bold; color:#555;">الكمية</label>
+              <input id="item_qty_${index}" type="number" value="${item.qty || 1}" min="1" 
+                     style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px; font-size:15px; background:white;">
+            </div>
+            <div>
+              <label style="display:block; margin-bottom:5px; font-weight:bold; color:#555;">السعر</label>
+              <input id="item_price_${index}" type="number" value="${item.unitPrice || 0}" min="0" step="0.01" 
+                     style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px; font-size:15px; background:white;">
+            </div>
+          </div>
+          
+          <div style="margin-top:10px; text-align:left; color:#1e3c72; font-weight:bold;">
+            المجموع: ${currentData.currency} ${itemTotal.toLocaleString()}
+          </div>
         </div>
       `;
+    });
+    html += `<input type="hidden" id="itemCount" value="${currentData.items.length}">`;
+  } else {
+    html += `
+      <div id="service_0" style="border:2px solid #eef2f7; padding:15px; margin-bottom:15px; border-radius:8px; background:#f8fafd;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+          <span style="font-weight:bold; color:#1e3c72;">خدمة 1</span>
+        </div>
+        <div style="margin-bottom:15px;">
+          <label style="display:block; margin-bottom:5px; font-weight:bold;">وصف الخدمة</label>
+          <input id="item_desc_0" type="text" value="" style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px;">
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div>
+            <label style="display:block; margin-bottom:5px;">الكمية</label>
+            <input id="item_qty_0" type="number" value="1" min="1" style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px;">
+          </div>
+          <div>
+            <label style="display:block; margin-bottom:5px;">السعر</label>
+            <input id="item_price_0" type="number" value="0" min="0" step="0.01" style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px;">
+          </div>
+        </div>
+      </div>
+    `;
+    html += `<input type="hidden" id="itemCount" value="1">`;
+  }
+  
+  // زر إضافة خدمة
+  html += `
+    <button type="button" onclick="addItemField()" 
+            style="background:#28a745; color:white; border:none; padding:15px; width:100%; border-radius:8px; margin:15px 0; cursor:pointer; font-size:16px; font-weight:bold; display:flex; align-items:center; justify-content:center; gap:10px;">
+      <i class="fas fa-plus-circle" style="font-size:20px;"></i> إضافة خدمة جديدة
+    </button>
+    
+    <div style="margin:20px 0;">
+      <label style="display:block; margin-bottom:5px; font-weight:bold; color:#1e3c72;">ملاحظات</label>
+      <textarea id="editNotes" rows="3" style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px;">${currentData.notes || ''}</textarea>
+    </div>
+    
+    <div style="background:#1e3c72; color:white; padding:20px; border-radius:10px; margin:20px 0; text-align:center;">
+      <div style="font-size:16px;">المجموع الكلي</div>
+      <div style="font-size:28px; font-weight:bold;">${currentData.currency || 'QAR'} ${currentData.total || 0}</div>
+    </div>
+  `;
+  
+  document.getElementById("editForm").innerHTML = html;
+  document.getElementById("editModal").style.display = "block";
+}
+
+// دالة حذف خدمة محددة
+function removeService(index) {
+  if (!confirm('هل أنت متأكد من حذف هذه الخدمة؟')) return;
+  
+  const itemCount = Number(document.getElementById("itemCount")?.value || 0);
+  
+  if (itemCount <= 1) {
+    alert("لا يمكن حذف آخر خدمة. يجب أن يكون هناك خدمة واحدة على الأقل.");
+    return;
+  }
+  
+  const serviceDiv = document.getElementById(`service_${index}`);
+  if (serviceDiv) {
+    serviceDiv.style.display = 'none';
+  }
+  
+  let newIndex = 0;
+  for (let i = 0; i < itemCount; i++) {
+    if (i !== index) {
+      const oldDesc = document.getElementById(`item_desc_${i}`)?.value || '';
+      const oldQty = document.getElementById(`item_qty_${i}`)?.value || '1';
+      const oldPrice = document.getElementById(`item_price_${i}`)?.value || '0';
+      const oldService = document.getElementById(`service_${i}`);
       
-      document.getElementById("editForm").innerHTML = html;
-      document.getElementById("editModal").style.display = "block";
+      if (oldService) {
+        oldService.id = `service_${newIndex}`;
+        
+        const descInput = document.getElementById(`item_desc_${i}`);
+        const qtyInput = document.getElementById(`item_qty_${i}`);
+        const priceInput = document.getElementById(`item_price_${i}`);
+        
+        if (descInput) {
+          descInput.id = `item_desc_${newIndex}`;
+          descInput.value = oldDesc;
+        }
+        if (qtyInput) {
+          qtyInput.id = `item_qty_${newIndex}`;
+          qtyInput.value = oldQty;
+        }
+        if (priceInput) {
+          priceInput.id = `item_price_${newIndex}`;
+          priceInput.value = oldPrice;
+        }
+        
+        const titleSpan = oldService.querySelector('span');
+        if (titleSpan) {
+          titleSpan.innerHTML = `<i class="fas fa-cube"></i> خدمة ${newIndex + 1}`;
+        }
+        
+        const deleteBtn = oldService.querySelector('button[onclick^="removeService"]');
+        if (deleteBtn) {
+          deleteBtn.setAttribute('onclick', `removeService(${newIndex})`);
+        }
+        
+        newIndex++;
+      }
+    }
+  }
+  
+  document.getElementById("itemCount").value = newIndex;
+  alert("✅ تم حذف الخدمة بنجاح");
+}
+
+// دالة إضافة خدمة جديدة
+function addItemField() {
+  const count = Number(document.getElementById("itemCount")?.value || 0);
+  const newIndex = count;
+  
+  const newServiceHtml = `
+    <div id="service_${newIndex}" style="border:2px solid #eef2f7; padding:15px; margin-bottom:15px; border-radius:8px; background:#f8fafd; position:relative; animation: slideIn 0.3s ease;">
+      <style>
+        @keyframes slideIn {
+          from { opacity:0; transform:translateY(-20px); }
+          to { opacity:1; transform:translateY(0); }
+        }
+      </style>
+      
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <span style="font-weight:bold; color:#1e3c72; font-size:16px;">
+          <i class="fas fa-cube"></i> خدمة ${newIndex + 1}
+        </span>
+        <button type="button" onclick="removeService(${newIndex})" 
+                style="background:#dc3545; color:white; border:none; width:40px; height:40px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 5px rgba(220,53,69,0.3);">
+          <i class="fas fa-trash-alt" style="font-size:18px;"></i>
+        </button>
+      </div>
+      
+      <div style="margin-bottom:15px;">
+        <label style="display:block; margin-bottom:5px; font-weight:bold; color:#555;">وصف الخدمة</label>
+        <input id="item_desc_${newIndex}" type="text" value="" 
+               placeholder="أدخل وصف الخدمة"
+               style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px; font-size:15px; background:white;">
+      </div>
+      
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+        <div>
+          <label style="display:block; margin-bottom:5px; font-weight:bold; color:#555;">الكمية</label>
+          <input id="item_qty_${newIndex}" type="number" value="1" min="1" 
+                 style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px; font-size:15px; background:white;">
+        </div>
+        <div>
+          <label style="display:block; margin-bottom:5px; font-weight:bold; color:#555;">السعر</label>
+          <input id="item_price_${newIndex}" type="number" value="0" min="0" step="0.01" 
+                 style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px; font-size:15px; background:white;">
+        </div>
+      </div>
+      
+      <div style="margin-top:10px; text-align:left; color:#1e3c72; font-weight:bold;">
+        المجموع: 0
+      </div>
+    </div>
+  `;
+  
+  const addButton = document.querySelector('#editForm button[onclick="addItemField()"]');
+  addButton.insertAdjacentHTML('beforebegin', newServiceHtml);
+  
+  document.getElementById("itemCount").value = newIndex + 1;
+  
+  setTimeout(() => {
+    document.getElementById(`service_${newIndex}`).scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 100);
+}
+
+// دالة تبديل حقول الدفع
+function togglePaymentFields() {
+  const type = document.getElementById("editPayType").value;
+  const container = document.getElementById("editPaymentFields");
+  
+  if (type === "bank") {
+    container.innerHTML = `
+      <div style="margin-bottom:10px;">
+        <label style="display:block; margin-bottom:5px; font-weight:bold; color:#1e3c72;">اسم البنك</label>
+        <input id="editBankName" type="text" value="" style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px;">
+      </div>
+      <div style="margin-bottom:10px;">
+        <label style="display:block; margin-bottom:5px; font-weight:bold; color:#1e3c72;">رقم IBAN</label>
+        <input id="editIban" type="text" value="" style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px;">
+      </div>
+    `;
+  } else if (type === "paypal") {
+    container.innerHTML = `
+      <div style="margin-bottom:10px;">
+        <label style="display:block; margin-bottom:5px; font-weight:bold; color:#1e3c72;">البريد الإلكتروني</label>
+        <input id="editPaypalEmail" type="email" value="" style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px;">
+      </div>
+    `;
+  } else if (type === "cash") {
+    container.innerHTML = `
+      <div style="background:#e8f5e9; padding:15px; border-radius:8px; color:#2e7d32;">
+        <i class="fas fa-money-bill-wave"></i> دفع نقداً
+      </div>
+    `;
+  } else {
+    container.innerHTML = '';
+  }
+}
+
+// دالة حفظ التعديلات
+async function saveEdit() {
+  try {
+    const clientName = document.getElementById("editClientName").value.trim();
+    if (!clientName) {
+      alert("❌ اسم العميل مطلوب");
+      return;
     }
     
-    // دالة إضافة خدمة جديدة
-    function addItemField() {
-      const count = Number(document.getElementById("itemCount")?.value || 0);
-      
-      const newItemHtml = `
-        <div style="border:2px solid #eef2f7; padding:15px; margin-bottom:15px; border-radius:8px; background:#f8fafd;">
-          <div style="margin-bottom:10px;">
-            <label style="display:block; margin-bottom:5px; font-weight:bold;">وصف الخدمة ${count+1}</label>
-            <input id="item_desc_${count}" type="text" value="" style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px;">
-          </div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-            <div>
-              <label style="display:block; margin-bottom:5px;">الكمية</label>
-              <input id="item_qty_${count}" type="number" value="1" min="1" style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px;">
-            </div>
-            <div>
-              <label style="display:block; margin-bottom:5px;">السعر</label>
-              <input id="item_price_${count}" type="number" value="0" min="0" step="0.01" style="width:100%; padding:12px; border:2px solid #eef2f7; border-radius:8px;">
-            </div>
-          </div>
-        </div>
-      `;
-      
-      const addButton = document.querySelector('#editForm button[onclick="addItemField()"]');
-      addButton.insertAdjacentHTML('beforebegin', newItemHtml);
-      
-      document.getElementById("itemCount").value = count + 1;
+    const itemCount = Number(document.getElementById("itemCount")?.value || 0);
+    const newItems = [];
+    
+    for (let i = 0; i < itemCount; i++) {
+      const desc = document.getElementById(`item_desc_${i}`)?.value;
+      if (desc && desc.trim()) {
+        newItems.push({
+          description: desc.trim(),
+          qty: Number(document.getElementById(`item_qty_${i}`)?.value || 1),
+          unitPrice: Number(document.getElementById(`item_price_${i}`)?.value || 0)
+        });
+      }
     }
+    
+    if (newItems.length === 0) {
+      alert("❌ أضف خدمة واحدة على الأقل");
+      return;
+    }
+    
+    const payType = document.getElementById("editPayType").value;
+    let payment = { type: payType };
+    
+    if (payType === "bank") {
+      payment.bankName = document.getElementById("editBankName")?.value || '';
+      payment.iban = document.getElementById("editIban")?.value || '';
+    } else if (payType === "paypal") {
+      payment.email = document.getElementById("editPaypalEmail")?.value || '';
+    }
+    
+    const newTotal = newItems.reduce((sum, item) => sum + (item.qty * item.unitPrice), 0);
+    
+    const newData = {
+      clientName: clientName,
+      taxNumber: document.getElementById("editTaxNumber")?.value || '',
+      commercialReg: document.getElementById("editCommercialReg")?.value || '',
+      address: document.getElementById("editAddress")?.value || '',
+      startDate: document.getElementById("editStartDate")?.value || '',
+      endDate: document.getElementById("editEndDate")?.value || '',
+      signedStatus: document.getElementById("editStatus")?.value || 'pending',
+      currency: document.getElementById("editCurrency")?.value || 'QAR',
+      notes: document.getElementById("editNotes")?.value || '',
+      items: newItems,
+      total: newTotal,
+      payment: payment
+    };
+    
+    const res = await fetch(apiUrl(), {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "update", quoteNo: currentQuoteNo, data: newData })
+    });
+    
+    const json = await res.json();
+    if (json.ok) {
+      alert(`✅ تم التعديل بنجاح`);
+      closeEdit();
+      searchQuote();
+    } else {
+      alert("❌ خطأ: " + json.message);
+    }
+  } catch (err) {
+    alert("❌ خطأ: " + err.message);
+  }
+}
+
+function closeEdit() {
+  document.getElementById("editModal").style.display = "none";
+}
     
     // دالة تبديل حقول الدفع
     function togglePaymentFields() {
@@ -619,6 +850,77 @@
         alert("خطأ: " + json.message);
       }
     }
+    // دالة حذف خدمة محددة
+function removeService(index) {
+  if (!confirm('هل أنت متأكد من حذف هذه الخدمة؟')) return;
+  
+  const itemCount = Number(document.getElementById("itemCount")?.value || 0);
+  
+  // إذا كانت آخر خدمة، لا تسمح بالحذف
+  if (itemCount <= 1) {
+    alert("لا يمكن حذف آخر خدمة. يجب أن يكون هناك خدمة واحدة على الأقل.");
+    return;
+  }
+  
+  // إخفاء الخدمة المراد حذفها
+  const serviceDiv = document.getElementById(`service_${index}`);
+  if (serviceDiv) {
+    serviceDiv.style.display = 'none';
+  }
+  
+  // إعادة ترقيم الخدمات المتبقية
+  let newIndex = 0;
+  for (let i = 0; i < itemCount; i++) {
+    if (i !== index) {
+      const oldDesc = document.getElementById(`item_desc_${i}`)?.value || '';
+      const oldQty = document.getElementById(`item_qty_${i}`)?.value || '1';
+      const oldPrice = document.getElementById(`item_price_${i}`)?.value || '0';
+      const oldService = document.getElementById(`service_${i}`);
+      
+      if (oldService) {
+        // تحديث IDs
+        oldService.id = `service_${newIndex}`;
+        
+        const descInput = document.getElementById(`item_desc_${i}`);
+        const qtyInput = document.getElementById(`item_qty_${i}`);
+        const priceInput = document.getElementById(`item_price_${i}`);
+        
+        if (descInput) {
+          descInput.id = `item_desc_${newIndex}`;
+          descInput.value = oldDesc;
+        }
+        if (qtyInput) {
+          qtyInput.id = `item_qty_${newIndex}`;
+          qtyInput.value = oldQty;
+        }
+        if (priceInput) {
+          priceInput.id = `item_price_${newIndex}`;
+          priceInput.value = oldPrice;
+        }
+        
+        // تحديث عنوان الخدمة
+        const titleSpan = oldService.querySelector('span');
+        if (titleSpan) {
+          titleSpan.innerHTML = `<i class="fas fa-cube"></i> خدمة ${newIndex + 1}`;
+        }
+        
+        // تحديث onclick لزر الحذف
+        const deleteBtn = oldService.querySelector('button[onclick^="removeService"]');
+        if (deleteBtn) {
+          deleteBtn.setAttribute('onclick', `removeService(${newIndex})`);
+        }
+        
+        newIndex++;
+      }
+    }
+  }
+  
+  // تحديث عداد الخدمات
+  document.getElementById("itemCount").value = newIndex;
+  
+  // إظهار رسالة نجاح
+  alert("✅ تم حذف الخدمة بنجاح");
+}
   </script>
 </body>
 </html>
